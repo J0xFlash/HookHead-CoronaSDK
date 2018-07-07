@@ -1,0 +1,24 @@
+﻿<data>
+	<achievements>
+		<achievement name='education'		type="count_win"				value="1"/>
+		<achievement name='recruit'			type="count_win"				value="5"/>
+		<achievement name='captain'			type="count_win"				value="20"/>
+		<achievement name='warlord'			type="count_win"				value="40"/>
+		<achievement name='wounded'			type="dmg_ally"					value="1000"/>
+		<achievement name='killer'			type="dmg_physic_enemy"			value="5000"/>
+		<achievement name='bloodthirsty'	type="dmg_physic_enemy"			value="15000"/>
+		<achievement name='mage'			type="dmg_magic_enemy"			value="5000"/>
+		<achievement name='healer'			type="heal_magic_ally"			value="1000"/>
+		<achievement name='wizard'			type="spent_mana"				value="200"/>
+		<achievement name='rich'			type="spent_money"				value="10000"/>
+		<achievement name='necromancer'		type="summon_skeleton"			value="5"/>
+		<achievement name='phoenix'			type="resurrection_phoenix"		value="1"/>
+		<achievement name='dracula'			type="cast_vampirism"			value="5"/>
+		<achievement name='talented'		type="use_ability"				value="30"/>
+		<achievement name='scientist'		type="buy_skill"				value="16"/>
+		<achievement name='the_best'		type="upgrade_unit"				value="8"/>
+		<achievement name='complete_outfit'	type="complete_outfit"			value="1"/>
+		<achievement name='kind_hearted'	type="complete_quest"			value="5"/>
+		<achievement name='campaign'		type="campaign_completed"		value="1"/>
+	</achievements>
+</data>
