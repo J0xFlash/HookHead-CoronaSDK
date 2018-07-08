@@ -79,6 +79,14 @@ standart.hitTest = function(mc,rr,tx,ty)
 	end
 	return false
 end
+standart.hitTestRect = function(mc, w, h, tx, ty)
+	if(tx>mc.x-w/2 and tx<mc.x+w/2)then
+		if(ty>mc.y-h/2 and ty<mc.y+h/2)then
+			return true;
+		end
+	end
+	return false;
+end
 standart.getDD = function(x1, y1, x2, y2)
 	local dx = x2 - x1;
 	local dy = y2 - y1;
@@ -148,4 +156,10 @@ standart.typeof = function(var)
     else
         return _type;
     end
+end
+standart.toDegrees = function(angle)
+  return angle * (180 / math.pi);
+end
+standart.toRadians = function(angle)
+  return angle * (math.pi / 180);
 end

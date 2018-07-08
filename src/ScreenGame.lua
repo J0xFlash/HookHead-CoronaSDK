@@ -7,12 +7,20 @@ module(..., package.seeall);
 function new()
 	local localGroup = display.newGroup();
 	local backGroup = display.newGroup();
+	local gameGroup = display.newGroup();
 	local faceGroup = display.newGroup();
 	
-	local arButtons = {};
-	local bWindow = false; -- открыто окно или нет
+	local _arButtons = {};
+	local _arWalls = {};
+	local _bWindow = false; -- открыто окно или нет
+	local _bArrow = false;
+	local _character = nil;
+	local _arrow = nil;
+	local _oldTime = getTimer();
+	local _timeGame = 0;
 	
 	localGroup:insert(backGroup);
+	localGroup:insert(gameGroup);
 	localGroup:insert(faceGroup);
 	
 	local paint = {
@@ -31,14 +39,148 @@ function new()
 	-- tfTitle.y = 400*scaleGraphics;
 	-- faceGroup:insert(tfTitle);
 	
+	local function createCharacter()
+		_character = display.newImage("images/items/character.png");
+		_character.xScale = 0.75;
+		_character.yScale = _character.xScale;
+		_character.x = _W/2;
+		_character.y = _H - 50*scaleGraphics - _character.height/2;
+		_character.speed = 30;
+		_character.xMov = 0;
+		_character.yMov = 0;
+		_character.move = false;
+		_character.alpha = 0.5;
+		gameGroup:insert(_character);
+		
+		if(#_arWalls > 0)then
+			local wall = _arWalls[1];
+			_character.x = wall.x + wall.width/2 + _character.width/2*_character.xScale;
+		end
+	end
+	
+	local function createWall()
+		for i=1, 5 do
+			local wall = display.newImage("images/items/wall.png");
+			if(i % 2 == 1)then
+				wall.x = wall.width/2;
+			else
+				wall.x = _W - wall.width/2;
+			end
+			-- wall.yScale = 0.8;
+			wall.y = _H - wall.height/2*wall.yScale - (i-1)*(wall.height*wall.yScale - 100);
+			wall.w = wall.width*wall.xScale;
+			wall.h = wall.height*wall.yScale;
+			gameGroup:insert(wall);
+			table.insert(_arWalls, wall);
+		end
+	end
+	
+	local function createArrow()
+		_arrow = display.newGroup();
+		local img = display.newImage("images/items/arrow.png");
+		img.x = img.width/2;
+		_arrow:insert(img);
+		gameGroup:insert(_arrow);
+		
+		_arrow.speed = 2;
+	end
+	
+	local function refreshCharacter()
+		local wall = _character.wall;
+		if(wall)then
+			if(wall.x > _W/2)then
+				_character.x = wall.x - wall.w/2 - _character.width/2*_character.xScale;
+			else
+				_character.x = wall.x + wall.w/2 + _character.width/2*_character.xScale;
+			end
+		end
+	end
+	
+	local function refreshArrow()
+		_arrow.x = _character.x;
+		_arrow.y = _character.y;
+		_arrow.isVisible = true;
+		if(_character.x > _W/2)then
+			_arrow.xScale = -1;
+		else
+			_arrow.xScale = 1;
+			_arrow.yScale = 1;
+		end
+	end
+	
+	local function init()
+		createWall();
+		createArrow();
+		createCharacter();
+		refreshArrow();
+	end
+	
+	init();
+	
+	local function touchCharacter(event)
+		local angle = standart.toRadians(_arrow.rotation);
+		local cosAngle = math.cos(angle);
+		local sinAngle = math.sin(angle);
+		_character.xMov = (_character.speed)*cosAngle;
+		_character.yMov = (_character.speed)*sinAngle;
+		_character.move = true;
+		_arrow.isVisible = false;
+	end
+	
+	local function moveCharacter()
+		if(_character.move == false)then
+			return;
+		end
+		
+		_character.x = _character.x + standart.mathRound(_character.xMov);
+		_character.y = _character.y + standart.mathRound(_character.yMov);
+		
+		for i=1,#_arWalls do
+			local wall = _arWalls[i];
+			
+			if(standart.hitTestRect(wall, wall.w, wall.h, _character.x, _character.y))then
+				_character.move = false;
+				_character.wall = wall;
+				refreshCharacter();
+				refreshArrow();
+				break;
+			end
+		end
+	end
+	
+	local function update()
+		if (options_pause) then
+			return;
+		end
+		
+		local diffTime = getTimer() - _oldTime;
+		
+		_timeGame = _timeGame + diffTime;
+		if(_bArrow)then
+			_arrow.rotation = _arrow.rotation + _arrow.speed;
+		else
+			_arrow.rotation = _arrow.rotation - _arrow.speed;
+		end
+		
+		if(_arrow.rotation < -60)then
+			_bArrow = true;
+		end
+		if(_arrow.rotation > -1)then
+			_bArrow = false;
+		end
+		
+		moveCharacter();
+		
+		_oldTime = getTimer();
+	end
 	
 	-------------- touchHandler ----------------
 	local function checkButtons(event)
-		if(bWindow)then
+		if(_bWindow)then
 			return;
 		end
-		for i=1,#arButtons do
-			local item_mc = arButtons[i];
+		for i=1,#_arButtons do
+			local item_mc = _arButtons[i];
 			local _x, _y = item_mc:localToContent(0, 0); -- localToGlobal
 			local dx = event.x - _x;
 			local dy = event.y - _y;
@@ -78,8 +220,8 @@ function new()
 		elseif(phase=='moved')then
 			checkButtons(event);
 		else
-			for i=1,#arButtons do
-				local item_mc = arButtons[i];
+			for i=1,#_arButtons do
+				local item_mc = _arButtons[i];
 				if(item_mc._selected)then
 					item_mc._selected = false;
 					if(item_mc._over)then
@@ -101,6 +243,8 @@ function new()
 					end
 				end
 			end
+			
+			touchCharacter(event);
 		end
 	end
 	
@@ -118,7 +262,7 @@ function new()
 					showDebug();
 				end
 			elseif(keyName == "escape" or keyName == "back") then
-				if(bWindow)then
+				if(_bWindow)then
 					if(wndInfo and wndInfo.isVisible)then
 						hideExit();
 					elseif(wndSetting and wndSetting.isVisible)then
@@ -134,7 +278,7 @@ function new()
 					showExit();
 				end
 			elseif(keyName == "enter") then
-				if(bWindow)then
+				if(_bWindow)then
 					if(wndInfo and wndInfo.isVisible)then
 						exitGame();
 					elseif(wndSetting and wndSetting.isVisible)then
@@ -179,6 +323,7 @@ function new()
 		end
 	end
 	
+	Runtime:addEventListener( "enterFrame", update );
 	Runtime:addEventListener( "touch", touchHandler );
 	Runtime:addEventListener( "key", onKeyEvent )
 	
