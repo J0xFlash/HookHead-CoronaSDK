@@ -10,34 +10,65 @@ function new()
 	local gameGroup = display.newGroup();
 	local faceGroup = display.newGroup();
 	
+	local ANGLE = 60;
+	
 	local _arButtons = {};
 	local _arWalls = {};
+	local _arTiles = {};
 	local _bWindow = false; -- открыто окно или нет
 	local _bArrow = false;
+	local _bGameOver = false;
 	local _character = nil;
+	local _posChar = 0;
 	local _arrow = nil;
 	local _oldTime = getTimer();
 	local _timeGame = 0;
+	local _levelTileY = 0;
+	local _levelWallY = 0;
+	local _offsetWallY = 400;
 	
-	localGroup:insert(backGroup);
 	localGroup:insert(gameGroup);
 	localGroup:insert(faceGroup);
+	gameGroup:insert(backGroup);
 	
-	local paint = {
-		type = "gradient",
-		color1 = { 2/255, 101/255, 120/255, 1 },
-		color2 = { 137/255, 19/255, 4/255, 1 },
-		direction = "down"
-	}
-	 
 	local rect = display.newRect( _W/2, _H/2, _W, _H )
-	rect.fill = paint
+	rect:setFillColor(0,0,0);
 	backGroup:insert(rect);
 	
-	-- local tfTitle = createText("The Game", 80*scaleGraphics, {1,1,1})
-	-- tfTitle.x = _W/2;
-	-- tfTitle.y = 400*scaleGraphics;
-	-- faceGroup:insert(tfTitle);
+	local tfTitle = createText("", 80*scaleGraphics, {1,1,1})
+	tfTitle.x = _W/2;
+	tfTitle.y = 400*scaleGraphics;
+	faceGroup:insert(tfTitle);
+	
+	local function createBackground()
+		local size = 254*scaleGraphics;
+		local countX = math.ceil(_W/size) + 1;
+		local countY = math.ceil(_H/size) + 1;
+		local count = countX * countY;
+		local posX = 0;
+		local posY = _levelTileY;
+		
+		for i=1, countY do
+			local tileGroup = display.newGroup();
+			posX = 0;
+			
+			for i=1, countX do
+				local tile = display.newImage("images/back/tileBg.png");
+				tile.xScale = scaleGraphics;
+				tile.yScale = scaleGraphics;
+				tile.w = tile.width*tile.xScale;
+				tile.h = tile.height*tile.yScale;
+				tile.x = tile.w*posX;
+				tile.y = 0;
+				tileGroup:insert(tile);
+				posX = posX + 1;
+			end
+			tileGroup.y = tileGroup.height*posY;
+			backGroup:insert(tileGroup);
+			table.insert(_arTiles, tileGroup);
+			posY = posY + 1;
+		end
+	end
 	
 	local function createCharacter()
 		_character = display.newImage("images/items/character.png");
@@ -49,8 +80,11 @@ function new()
 		_character.xMov = 0;
 		_character.yMov = 0;
 		_character.move = false;
-		_character.alpha = 0.5;
+		_character.w = _character.width*_character.xScale;
+		_character.h = _character.height*_character.yScale;
 		gameGroup:insert(_character);
+		
+		_posChar = _character.y;
 		
 		if(#_arWalls > 0)then
 			local wall = _arWalls[1];
@@ -59,19 +93,24 @@ function new()
 	end
 	
 	local function createWall()
-		for i=1, 5 do
+		for i=1, 6 do
 			local wall = display.newImage("images/items/wall.png");
-			if(i % 2 == 1)then
-				wall.x = wall.width/2;
-			else
-				wall.x = _W - wall.width/2;
-			end
-			-- wall.yScale = 0.8;
-			wall.y = _H - wall.height/2*wall.yScale - (i-1)*(wall.height*wall.yScale - 100);
+			wall.xScale = 1;
+			wall.yScale = 1 - math.random()*0.3;
+			wall.alpha = 0.5;
 			wall.w = wall.width*wall.xScale;
 			wall.h = wall.height*wall.yScale;
+			wall.char = false;
+			if(i % 2 == 1)then
+				wall.x = wall.w/2;
+			else
+				wall.x = _W - wall.w/2;
+			end
+			wall.y = _H - (i-1)*_offsetWallY;
 			gameGroup:insert(wall);
 			table.insert(_arWalls, wall);
+			
+			_levelWallY = i;
 		end
 	end
 	
@@ -100,6 +139,7 @@ function new()
 		_arrow.x = _character.x;
 		_arrow.y = _character.y;
 		_arrow.isVisible = true;
+		_arrow.rotation = 0;
 		if(_character.x > _W/2)then
 			_arrow.xScale = -1;
 		else
@@ -109,6 +149,7 @@ function new()
 	end
 	
 	local function init()
+		createBackground();
 		createWall();
 		createArrow();
 		createCharacter();
@@ -119,26 +160,44 @@ function new()
 	
 	local function touchCharacter(event)
 		local angle = standart.toRadians(_arrow.rotation);
-		local cosAngle = math.cos(angle);
-		local sinAngle = math.sin(angle);
+		local cosAngle = math.cos(angle)*_arrow.xScale;
+		local sinAngle = math.sin(angle)*_arrow.xScale;
 		_character.xMov = (_character.speed)*cosAngle;
 		_character.yMov = (_character.speed)*sinAngle;
 		_character.move = true;
 		_arrow.isVisible = false;
 	end
 	
-	local function moveCharacter()
-		if(_character.move == false)then
-			return;
+	local function updateTiles()
+		for i=1,#_arTiles do
+			local tile = _arTiles[i];
+			if(tile.y + gameGroup.y > _H + tile.height)then
+				_levelTileY = _levelTileY - 1;
+				tile.y = tile.height*_levelTileY;
+			end
 		end
-		
-		_character.x = _character.x + standart.mathRound(_character.xMov);
-		_character.y = _character.y + standart.mathRound(_character.yMov);
-		
+	end
+	
+	local function refreshWalls()
 		for i=1,#_arWalls do
 			local wall = _arWalls[i];
+			wall.char = false;
+		end
+	end
+	
+	local function updateWalls()
+		for i=1,#_arWalls do
+			local wall = _arWalls[i];
+			if(wall.y + gameGroup.y > _H + wall.h)then
+				_levelWallY = _levelWallY + 1;
+				wall.yScale = 1 - math.random()*0.3;
+				wall.h = wall.height*wall.yScale;
+				wall.y = _H - (_levelWallY-1)*_offsetWallY;
+			end
 			
-			if(standart.hitTestRect(wall, wall.w, wall.h, _character.x, _character.y))then
+			if(standart.hasCollidedRect(wall, _character) and wall.char == false)then
+				refreshWalls();
+				wall.char = true;
 				_character.move = false;
 				_character.wall = wall;
 				refreshCharacter();
@@ -148,27 +207,61 @@ function new()
 		end
 	end
 	
-	local function update()
-		if (options_pause) then
+	local function moveCharacter()
+		if(_character.move == false)then
 			return;
 		end
 		
-		local diffTime = getTimer() - _oldTime;
+		_character.x = _character.x + standart.mathRound(_character.xMov);
+		_character.y = _character.y + standart.mathRound(_character.yMov);
+		gameGroup.y = -_character.y + _posChar;
 		
-		_timeGame = _timeGame + diffTime;
+		if(_character.x < -_character.w/2 or _character.x > _W + _character.w/2)then
+			_bGameOver = true;
+			gameOver();
+		end
+	end
+	
+	local function rotationArrow()
+		if(_character.move)then
+			return;
+		end
+	
 		if(_bArrow)then
 			_arrow.rotation = _arrow.rotation + _arrow.speed;
 		else
 			_arrow.rotation = _arrow.rotation - _arrow.speed;
 		end
 		
-		if(_arrow.rotation < -60)then
-			_bArrow = true;
+		if(_arrow.xScale == 1)then
+			if(_arrow.rotation < -ANGLE)then
+				_bArrow = true;
+			end
+			if(_arrow.rotation > -1)then
+				_bArrow = false;
+			end
+		else
+			if(_arrow.rotation < -1)then
+				_bArrow = true;
+			end
+			if(_arrow.rotation > ANGLE)then
+				_bArrow = false;
+			end
 		end
-		if(_arrow.rotation > -1)then
-			_bArrow = false;
+	end
+	
+	local function update()
+		if (options_pause or _bGameOver) then
+			return;
 		end
 		
+		local diffTime = getTimer() - _oldTime;
+		
+		_timeGame = _timeGame + diffTime;
+		
+		updateTiles();
+		updateWalls();
+		rotationArrow();
 		moveCharacter();
 		
 		_oldTime = getTimer();
@@ -292,6 +385,11 @@ function new()
 			end
 		end
 		return false;
+	end
+	
+	function gameOver()
+		localGroup:removeAllListeners();
+		showMenu();
 	end
 	
 	function localGroup:removeAllListeners()
