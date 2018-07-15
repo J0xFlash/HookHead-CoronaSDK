@@ -15,6 +15,7 @@ function new()
 	local _arButtons = {};
 	local _arWalls = {};
 	local _arTiles = {};
+	local _arPlatforms = {};
 	local _bWindow = false; -- открыто окно или нет
 	local _bArrow = false;
 	local _bGameOver = false;
@@ -24,8 +25,10 @@ function new()
 	local _oldTime = getTimer();
 	local _timeGame = 0;
 	local _levelTileY = 0;
+	local _levelPlatformY = 0;
 	local _levelWallY = 0;
 	local _offsetWallY = 400;
+	local _offsetPlatformY = 700;
 	
 	localGroup:insert(gameGroup);
 	localGroup:insert(faceGroup);
@@ -53,7 +56,7 @@ function new()
 			posX = 0;
 			
 			for i=1, countX do
-				local tile = display.newImage("images/back/tileBg.png");
+				local tile = addObj("tileBg");
 				tile.xScale = scaleGraphics;
 				tile.yScale = scaleGraphics;
 				tile.w = tile.width*tile.xScale;
@@ -70,9 +73,49 @@ function new()
 		end
 	end
 	
+	local function createPlatform()
+		
+		local size = 254*scaleGraphics;
+		local posY = _levelPlatformY;
+		
+		for i=1, 6 do
+			local platform = addObj("floor_0" .. i);
+			scaleObjects(platform, scaleGraphics);
+			platform.w = platform.width*platform.xScale;
+			platform.h = platform.height*platform.yScale;
+			platform.x = _W/2;
+			platform.y = _H - posY*_offsetPlatformY;
+			backGroup:insert(platform);
+			table.insert(_arPlatforms, platform);
+			posY = posY + 1;
+		end
+		
+		_levelPlatformY = posY;
+	end
+	
+	local function refreshSkinCharacter(value)
+		value = tostring(value);
+		_character.skin1.isVisible = false;
+		_character.skin2.isVisible = false;
+		_character.skin3.isVisible = false;
+		_character.skin4.isVisible = false;
+		_character["skin" .. value].isVisible = true;
+	end
+	
+	local function createSkinCharacter(value)
+		value = tostring(value);
+		_character["skin" .. value] = addObj("character_" .. value);
+		_character:insert(_character["skin" .. value]);
+	end
+	
 	local function createCharacter()
-		_character = display.newImage("images/items/character.png");
-		_character.xScale = 0.75;
+		_character = display.newGroup();
+		createSkinCharacter(1);
+		createSkinCharacter(2);
+		createSkinCharacter(3);
+		createSkinCharacter(4);
+		refreshSkinCharacter(3);
+		_character.xScale = 0.5;
 		_character.yScale = _character.xScale;
 		_character.x = _W/2;
 		_character.y = _H - 50*scaleGraphics - _character.height/2;
@@ -116,12 +159,24 @@ function new()
 	
 	local function createArrow()
 		_arrow = display.newGroup();
-		local img = display.newImage("images/items/arrow.png");
-		img.x = img.width/2;
+		local scale = 0.75;
+		local img = addObj("hook");
+		img.xScale = -1*scale;
+		img.yScale = scale;
+		img.x = img.width/2*math.abs(img.xScale);
 		_arrow:insert(img);
 		gameGroup:insert(_arrow);
 		
 		_arrow.speed = 2;
+	end
+	
+	local function createButtons()
+		local btnPause = addButtonTexture("btnPause");
+		scaleObjects(btnPause, 0.6*scaleGraphics)
+		btnPause.x = _W - btnPause.w/2 - 15*scaleGraphics;
+		btnPause.y = btnPause.h/2 + 15*scaleGraphics;
+		faceGroup:insert(btnPause)
+		table.insert(_arButtons, btnPause);
 	end
 	
 	local function refreshCharacter()
@@ -133,6 +188,7 @@ function new()
 				_character.x = wall.x + wall.w/2 + _character.width/2*_character.xScale;
 			end
 		end
+		refreshSkinCharacter(3);
 	end
 	
 	local function refreshArrow()
@@ -150,13 +206,23 @@ function new()
 	
 	local function init()
 		createBackground();
+		createPlatform();
 		createWall();
 		createArrow();
 		createCharacter();
 		refreshArrow();
+		createButtons();
 	end
 	
 	init();
+	
+	local function pauseGame()
+		if(options_pause)then
+			options_pause = false;
+		else
+			options_pause = true;
+		end
+	end
 	
 	local function touchCharacter(event)
 		local angle = standart.toRadians(_arrow.rotation);
@@ -166,6 +232,7 @@ function new()
 		_character.yMov = (_character.speed)*sinAngle;
 		_character.move = true;
 		_arrow.isVisible = false;
+		refreshSkinCharacter(1);
 	end
 	
 	local function updateTiles()
@@ -203,6 +270,17 @@ function new()
 				refreshCharacter();
 				refreshArrow();
 				break;
+			end
+		end
+	end
+	
+	local function updatePlatforms()
+		for i=1,#_arPlatforms do
+			local wall = _arPlatforms[i];
+			if(wall.y + gameGroup.y > _H + wall.h)then
+				_levelPlatformY = _levelPlatformY + 1;
+				wall.h = wall.height*wall.yScale;
+				wall.y = _H - (_levelPlatformY-1)*_offsetPlatformY;
 			end
 		end
 	end
@@ -261,6 +339,7 @@ function new()
 		
 		updateTiles();
 		updateWalls();
+		updatePlatforms();
 		rotationArrow();
 		moveCharacter();
 		
@@ -329,9 +408,9 @@ function new()
 						item_mc:onRelease();
 						soundPlay("click_approve");
 						return true;
-					elseif(item_mc.act == "start")then
+					elseif(item_mc.act == "btnPause")then
 						soundPlay("click_approve");
-						showGame();
+						pauseGame();
 						return true;
 					end
 				end
@@ -398,26 +477,6 @@ function new()
 		if(wndSetting)then
 			wndSetting:removeAllListeners();
 			wndSetting = nil;
-		end
-		if(wndLang)then
-			wndLang:removeAllListeners();
-			wndLang = nil;
-		end
-		if(wndInfo)then
-			wndInfo:removeAllListeners();
-			wndInfo = nil;
-		end
-		if(wndNew)then
-			wndNew:removeAllListeners();
-			wndNew = nil;
-		end
-		if(wndDebug)then
-			wndDebug:removeAllListeners();
-			wndDebug = nil;
-		end
-		if(wndDifficulty)then
-			wndDifficulty:removeAllListeners();
-			wndDifficulty = nil;
 		end
 	end
 	

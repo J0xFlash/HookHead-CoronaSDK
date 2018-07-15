@@ -15,23 +15,21 @@ function new()
 	localGroup:insert(backGroup);
 	localGroup:insert(faceGroup);
 	
-	local paint = {
-		type = "gradient",
-		color1 = { 1, 0, 0.4 },
-		color2 = { 1, 0, 0, 0.2 },
-		direction = "down"
-	}
-	 
-	local rect = display.newRect( _W/2, _H/2, _W, _H )
-	rect.fill = paint
-	backGroup:insert(rect);
+	local bg = display.newImage("images/back/bgMenu.jpg");
+	bg.xScale = scaleGraphics;
+	bg.yScale = scaleGraphics;
+	bg.x = _W/2;
+	bg.y = _H/2;
+	backGroup:insert(bg);
 	
-	local tfTitle = createText("The Floor is Lava The Game", 80*scaleGraphics, {1,1,1})
+	local tfTitle = createText("Title Game", 80*scaleGraphics, {0,0,0})
 	tfTitle.x = _W/2;
 	tfTitle.y = 400*scaleGraphics;
 	faceGroup:insert(tfTitle);
 	
-	local btnStart = addButton("start", _W/2, _H - 300*scaleGraphics, "images/buttons/btnDefault.png", nil, 40);
+	local btnStart = addButtonTexture("btnPlay");
+	btnStart.x = _W/2;
+	btnStart.y = _H - 350*scaleGraphics;
 	faceGroup:insert(btnStart)
 	table.insert(arButtons, btnStart);
 	
@@ -99,7 +97,7 @@ function new()
 						item_mc:onRelease();
 						soundPlay("click_approve");
 						return true;
-					elseif(item_mc.act == "start")then
+					elseif(item_mc.act == "btnPlay")then
 						soundPlay("click_approve");
 						showGame();
 						return true;

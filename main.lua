@@ -304,6 +304,47 @@ function addButton(title, tx, ty, fname, onRelease, tfSize, tfColor, ico)
 	
 	return item_mc
 end
+
+function addButtonTexture(name, title)
+	if(title == nil)then
+		title = name;
+	end
+	local item_mc = display.newGroup();
+	item_mc.act = title;
+	local body_mc = addObj(name);
+	item_mc:insert(body_mc)
+	local over_mc = addObj(name);
+	over_mc.blendMode = "add";
+	over_mc.alpha = 0.0;
+	item_mc:insert(over_mc)
+	item_mc.r = body_mc.width*body_mc.xScale/2;
+	item_mc.rr = item_mc.r*item_mc.r;
+	item_mc.w = item_mc.width*item_mc.xScale;
+	item_mc.h = item_mc.height*item_mc.yScale;
+	item_mc._selected = false;
+	item_mc._body = body_mc;
+	item_mc._over = over_mc;
+	item_mc.enabled = true;
+
+	if(tfSize)then
+		item_mc.tf = display.newText( getText(title), 0, 0, fontMain, tfSize );
+		if(tfColor)then
+			item_mc.tf:setFillColor( tfColor[1]/255, tfColor[2]/255, tfColor[3]/255 );
+		else
+			item_mc.tf:setFillColor( 1,1,1 );
+		end
+		item_mc.tf.x = 0;
+		item_mc.tf.y = 0;
+		item_mc:insert(item_mc.tf);
+	end
+	if(ico)then
+		local body_mc = display.newImage(item_mc, "image/buttons/" .. ico .. ".png");
+		item_mc.ico = body_mc;
+	end
+	
+	return item_mc
+end
+
 function createText(text, size, fillColor, embossColor, font)
 	if(size == nil)then
 		size = 24*scaleGraphics;
@@ -438,9 +479,9 @@ end
 Runtime:addEventListener("system", onSystem);
 
 local function iniSetArt(set_name)
-	local sheetInfo = require('image.texture.'..set_name);
+	local sheetInfo = require('images.texture.'..set_name);
 	local data = sheetInfo:getSheet();
-	local image = graphics.newImageSheet('image/texture/'.. set_name..".png", data);
+	local image = graphics.newImageSheet('images/texture/'.. set_name..".png", data);
 	local sequences = {};
 	
 	for key,value in pairs(sheetInfo.frameIndex) do
@@ -461,7 +502,9 @@ local function loadSounds()
 end
 
 local function loadTexture()
-	-- iniSetArt("artifactsTexture");
+	iniSetArt("back1Texture");
+	iniSetArt("back2Texture");
+	iniSetArt("itemsTexture");
 end
 
 local function onResize(event)
@@ -495,8 +538,7 @@ local function main()
 	end);
 	table.insert(loading_steps, function()
 		-- musicPlay("musicMap");
-		
-	end);director:changeScene("src.ScreenMenu");
+	end);
 	
 	local loading_steps_max = #loading_steps+1;
 	local st=getTimer();
@@ -516,6 +558,7 @@ local function main()
 			return
 		end
 		loaderClose();
+		director:changeScene("src.ScreenMenu");
 		print('mainHandler:game loaded in '..(getTimer()-st)..'ms');
 		
 		Runtime:removeEventListener("enterFrame", mainHandler);
