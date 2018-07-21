@@ -1,7 +1,7 @@
 --
 -- created with TexturePacker - https://www.codeandweb.com/texturepacker
 --
--- $TexturePacker:SmartUpdate:b96bbf13ce55739dac65008d44f9f239:aacd9e80235f128b30c20decee9ddf9e:24e4eb0fb33b646fc21874bb6fc8fecb$
+-- $TexturePacker:SmartUpdate:de9a1e66367a3ab1a0301c6920284822:5daf832fcff7c25e568b8638c119c698:24e4eb0fb33b646fc21874bb6fc8fecb$
 --
 -- local sheetInfo = require("mysheet")
 -- local myImageSheet = graphics.newImageSheet( "mysheet.png", sheetInfo:getSheet() )
@@ -16,31 +16,31 @@ SheetInfo.sheet =
     
         {
             -- btnExit
-            x=1,
-            y=515,
-            width=300,
-            height=300,
-
-        },
-        {
-            -- btnMenu
-            x=515,
+            x=1597,
             y=1,
             width=300,
             height=300,
 
         },
         {
+            -- btnMenu
+            x=1597,
+            y=303,
+            width=300,
+            height=300,
+
+        },
+        {
             -- btnPause
-            x=1,
-            y=817,
+            x=1073,
+            y=515,
             width=300,
             height=300,
 
         },
         {
             -- btnPlay
-            x=1,
+            x=1083,
             y=1,
             width=512,
             height=512,
@@ -48,16 +48,16 @@ SheetInfo.sheet =
         },
         {
             -- btnRestart
-            x=1,
-            y=1119,
+            x=1575,
+            y=605,
             width=300,
             height=300,
 
         },
         {
             -- btnSound
-            x=303,
-            y=515,
+            x=1,
+            y=625,
             width=300,
             height=300,
 
@@ -65,7 +65,7 @@ SheetInfo.sheet =
         {
             -- character_1
             x=303,
-            y=817,
+            y=625,
             width=270,
             height=270,
 
@@ -76,32 +76,32 @@ SheetInfo.sheet =
         },
         {
             -- character_2
-            x=303,
-            y=1089,
-            width=270,
-            height=270,
+            x=847,
+            y=817,
+            width=266,
+            height=266,
 
-            sourceX = 14,
-            sourceY = 15,
+            sourceX = 16,
+            sourceY = 16,
             sourceWidth = 300,
             sourceHeight = 300
         },
         {
             -- character_3
-            x=575,
+            x=1115,
             y=817,
-            width=270,
-            height=270,
+            width=266,
+            height=266,
 
-            sourceX = 14,
-            sourceY = 15,
+            sourceX = 16,
+            sourceY = 16,
             sourceWidth = 300,
             sourceHeight = 300
         },
         {
             -- character_4
             x=575,
-            y=1089,
+            y=625,
             width=270,
             height=270,
 
@@ -111,53 +111,101 @@ SheetInfo.sheet =
             sourceHeight = 300
         },
         {
+            -- floor
+            x=1,
+            y=1,
+            width=1080,
+            height=404,
+
+        },
+        {
             -- hook
-            x=303,
-            y=1361,
+            x=809,
+            y=1085,
             width=432,
             height=141,
 
         },
         {
+            -- Score
+            x=1,
+            y=407,
+            width=870,
+            height=216,
+
+            sourceX = 0,
+            sourceY = 0,
+            sourceWidth = 870,
+            sourceHeight = 222
+        },
+        {
             -- tileBg
-            x=605,
-            y=303,
+            x=303,
+            y=897,
             width=254,
             height=254,
 
         },
         {
             -- wallLeftDown
-            x=605,
-            y=559,
-            width=124,
-            height=124,
+            x=559,
+            y=897,
+            width=248,
+            height=248,
 
         },
         {
             -- wallLeftMiddle
-            x=737,
-            y=1361,
-            width=102,
-            height=124,
+            x=873,
+            y=407,
+            width=198,
+            height=248,
 
-            sourceX = 8,
+            sourceX = 17,
             sourceY = 0,
-            sourceWidth = 124,
-            sourceHeight = 124
+            sourceWidth = 248,
+            sourceHeight = 248
         },
         {
             -- wallLeftTop
-            x=605,
-            y=685,
-            width=124,
-            height=124,
+            x=1,
+            y=927,
+            width=248,
+            height=248,
+
+        },
+        {
+            -- wallRightDown
+            x=1383,
+            y=907,
+            width=248,
+            height=248,
+
+        },
+        {
+            -- wallRightMiddle
+            x=1375,
+            y=515,
+            width=198,
+            height=248,
+
+            sourceX = 32,
+            sourceY = 0,
+            sourceWidth = 248,
+            sourceHeight = 248
+        },
+        {
+            -- wallRightTop
+            x=1633,
+            y=907,
+            width=248,
+            height=248,
 
         },
     },
 
-    sheetContentWidth = 860,
-    sheetContentHeight = 1503
+    sheetContentWidth = 1898,
+    sheetContentHeight = 1227
 }
 
 SheetInfo.frameIndex =
@@ -173,11 +221,16 @@ SheetInfo.frameIndex =
     ["character_2"] = 8,
     ["character_3"] = 9,
     ["character_4"] = 10,
-    ["hook"] = 11,
-    ["tileBg"] = 12,
-    ["wallLeftDown"] = 13,
-    ["wallLeftMiddle"] = 14,
-    ["wallLeftTop"] = 15,
+    ["floor"] = 11,
+    ["hook"] = 12,
+    ["Score"] = 13,
+    ["tileBg"] = 14,
+    ["wallLeftDown"] = 15,
+    ["wallLeftMiddle"] = 16,
+    ["wallLeftTop"] = 17,
+    ["wallRightDown"] = 18,
+    ["wallRightMiddle"] = 19,
+    ["wallRightTop"] = 20,
 }
 
 function SheetInfo:getSheet()

@@ -22,7 +22,7 @@ function new()
 	bg.y = _H/2;
 	backGroup:insert(bg);
 	
-	local tfTitle = createText("Title Game", 80*scaleGraphics, {0,0,0})
+	local tfTitle = createText("Title Game", 80*scaleGraphics, {1,1,1})
 	tfTitle.x = _W/2;
 	tfTitle.y = 400*scaleGraphics;
 	faceGroup:insert(tfTitle);
@@ -32,6 +32,12 @@ function new()
 	btnStart.y = _H - 350*scaleGraphics;
 	faceGroup:insert(btnStart)
 	table.insert(arButtons, btnStart);
+	local btnSound = addButtonTexture("btnSound");
+	scaleObjects(btnSound, 0.6*scaleGraphics)
+	btnSound.x = _W - btnSound.w/2 - 15*scaleGraphics;
+	btnSound.y = btnSound.h/2 + 15*scaleGraphics;
+	faceGroup:insert(btnSound)
+	table.insert(arButtons, btnSound);
 	
 	scaleObjects(btnStart, scaleGraphics);
 	
