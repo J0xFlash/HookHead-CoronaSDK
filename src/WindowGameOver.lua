@@ -21,23 +21,23 @@ function new(callRestart, callMenu)
 	bg.yScale = 0.5;
 	localGroup:insert(bg);
 	
-	local tfTitle = createText(getText("options"), 40, {128/255,137/255,137/255})
+	local tfTitle = createText(getText("game_over"), 40, {128/255,137/255,137/255})
 	tfTitle.x = 0;
 	tfTitle.y = - 150;
 	localGroup:insert(tfTitle);
 	
-	local tfTitle = createText("Greenolor Studio", 30, {195/255,120/255,91/255})
+	local tfTitle = createText(getText("your_score"), 30, {195/255,120/255,91/255})
 	tfTitle.x = 0;
 	tfTitle.y = 70;
 	localGroup:insert(tfTitle);
-	local tfTitle = createText(getText("dev_sergey_pomorin"), 20, {128/255,137/255,137/255})
+	local tfTitle = createText(getItemCount("score"), 40, {128/255,137/255,137/255})
 	tfTitle.x = 0;
-	tfTitle.y = 105;
+	tfTitle.y = 125;
 	localGroup:insert(tfTitle);
-	local tfTitle = createText(getText("dev_evgeny_titov"), 20, {128/255,137/255,137/255})
-	tfTitle.x = 0;
-	tfTitle.y = 130;
-	localGroup:insert(tfTitle);
+	-- local tfTitle = createText(getText("dev_evgeny_titov"), 20, {128/255,137/255,137/255})
+	-- tfTitle.x = 0;
+	-- tfTitle.y = 130;
+	-- localGroup:insert(tfTitle);
 	
 	local function refreshSound()
 		btnSoundOff.isVisible = (greenSounds:getMusicBol() == false);

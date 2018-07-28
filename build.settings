@@ -21,7 +21,17 @@ settings =
 		usesPermissions =
 		{
 			"android.permission.INTERNET",
+			"android.permission.ACCESS_NETWORK_STATE",
+            "com.android.vending.CHECK_LICENSE"
 		},
+		supportsScreens =
+			{
+				smallScreens  = true,
+				normalScreens = true,
+				largeScreens  = true,
+				xlargeScreens = true,
+			},
+		--googlePlayGamesAppId = "713515796806",
 	},
 
 	--
@@ -45,6 +55,11 @@ settings =
 		["plugin.openssl"] = {
 			publisherId = "com.coronalabs",
 		},
+		["plugin.gpgs"] =
+        {
+            publisherId = "com.coronalabs",
+            supportedPlatforms = { android=true }
+        },
 	},
 
 	--

@@ -16,30 +16,97 @@ function new()
 	localGroup:insert(faceGroup);
 	
 	local bg = display.newImage("images/back/bgMenu.jpg");
-	bg.xScale = scaleGraphics;
-	bg.yScale = scaleGraphics;
+	bg.xScale = maxScale;
+	bg.yScale = maxScale;
 	bg.x = _W/2;
 	bg.y = _H/2;
 	backGroup:insert(bg);
-	
-	local tfTitle = createText("Title Game", 80*scaleGraphics, {1,1,1})
-	tfTitle.x = _W/2;
-	tfTitle.y = 400*scaleGraphics;
-	faceGroup:insert(tfTitle);
+	local logo = display.newImage("images/back/logoGame.png");
+	logo.xScale = scaleGraphics;
+	logo.yScale = scaleGraphics;
+	logo.x = _W/2;
+	logo.y = 350*scaleGraphics;
+	backGroup:insert(logo);
 	
 	local btnStart = addButtonTexture("btnPlay");
+	scaleObjects(btnStart, 0.75*scaleGraphics);
 	btnStart.x = _W/2;
-	btnStart.y = _H - 350*scaleGraphics;
+	btnStart.y = _H - 300*scaleGraphics;
 	faceGroup:insert(btnStart)
 	table.insert(arButtons, btnStart);
+	
+	local btnExit = addButtonTexture("btnExit");
+	scaleObjects(btnExit, 0.6*scaleGraphics)
+	btnExit.x = btnExit.w/2 + 25*scaleGraphics;
+	btnExit.y = _H - btnExit.h/2 - 25*scaleGraphics;
+	faceGroup:insert(btnExit)
+	table.insert(arButtons, btnExit);
+	local btnSoundOff = addButtonTexture("btnSoundOff");
+	scaleObjects(btnSoundOff, 0.6*scaleGraphics)
+	btnSoundOff.x = _W - btnSoundOff.w/2 - 25*scaleGraphics;
+	btnSoundOff.y = _H - btnSoundOff.h/2 - 25*scaleGraphics;
+	faceGroup:insert(btnSoundOff)
+	table.insert(arButtons, btnSoundOff);
 	local btnSound = addButtonTexture("btnSound");
 	scaleObjects(btnSound, 0.6*scaleGraphics)
-	btnSound.x = _W - btnSound.w/2 - 15*scaleGraphics;
-	btnSound.y = btnSound.h/2 + 15*scaleGraphics;
+	btnSound.x = btnSoundOff.x;
+	btnSound.y = btnSoundOff.y;
 	faceGroup:insert(btnSound)
 	table.insert(arButtons, btnSound);
+	local btnGoogle = addButtonTexture("btnGoogle");
+	scaleObjects(btnGoogle, 0.6*scaleGraphics)
+	btnGoogle.x = btnSoundOff.x;
+	btnGoogle.y = btnSoundOff.y - btnSoundOff.h/2 - btnGoogle.h/2 - 50*scaleGraphics;
+	faceGroup:insert(btnGoogle)
+	table.insert(arButtons, btnGoogle);
 	
-	scaleObjects(btnStart, scaleGraphics);
+	local function refreshSound()
+		btnSoundOff.isVisible = (greenSounds:getMusicBol() == false);
+		btnSound.isVisible = greenSounds:getMusicBol();
+	end
+	refreshSound();
+	
+	local function gpgsInitListener( event1 )
+		if not event1.isError then
+			if ( event1.name == "init" ) then  -- Initialization event
+				-- Attempt to log in the user
+				globalData.gpgs.login(
+				{
+					userInitiated = true,
+					listener = function(event2)
+						if (event2.isError) then
+							show_msg(event2.errorMessage);
+							print("Error on login", event2.errorCode, event2.errorMessage)
+						else
+							globalData.gpgs.players.load({
+								listener = function(event3)
+									if not event3.isError then
+										_G.login_obj['google_user'] = event3.players[1];
+										_G.login_obj['google_user_id'] = event3.players[1].id;
+										_G.login_obj['google_user_name'] = event3.players[1].name;
+										-- https://docs.coronalabs.com/plugin/gpgs/players/type/Player/index.html
+										btnGoogle.isVisible = false;
+									else
+										show_msg(event3.errorMessage);
+										print("could not get player id")
+									end
+								end
+							})
+						end
+					end
+				}
+			)
+			end
+		end
+	end
+	
+	local function initGoogle()
+		-- Initialize game network based on platform
+		if ( globalData.gpgs ) then
+			-- Initialize Google Play Games Services
+			globalData.gpgs.init( gpgsInitListener )
+		end
+	end
 	
 	-------------- touchHandler ----------------
 	local function checkButtons(event)
@@ -107,6 +174,20 @@ function new()
 						soundPlay("click_approve");
 						showGame();
 						return true;
+					elseif(item_mc.act == "btnSound" or item_mc.act == "btnSoundOff")then
+						soundPlay("click_approve");
+						musicSwith();
+						refreshSound();
+						return true;
+					elseif(item_mc.act == "btnExit")then
+						soundPlay("click_approve");
+						localGroup:removeAllListeners();
+						native.requestExit();
+						return true;
+					elseif(item_mc.act == "btnGoogle")then
+						soundPlay("click_approve");
+						initGoogle();
+						return true;
 					end
 				end
 			end
@@ -114,47 +195,12 @@ function new()
 	end
 	
 	local function onKeyEvent(event)
-	   local phase = event.phase
-	   local keyName = event.keyName
-	   local nativeKeyCode = event.nativeKeyCode;
-	   local isShiftDown = event.isShiftDown;
-		if(phase == 'up') then
-			-- print("nativeKeyCode:", nativeKeyCode, keyName)
-			if(isShiftDown and keyName == "`") then
-				if(bDebug)then
-					closeDebug();
-				else
-					showDebug();
-				end
-			elseif(keyName == "escape" or keyName == "back") then
-				if(bWindow)then
-					if(wndInfo and wndInfo.isVisible)then
-						hideExit();
-					elseif(wndSetting and wndSetting.isVisible)then
-						closeOptions();
-					elseif(wndNew and wndNew.isVisible)then
-						hideNewGame();
-					elseif(wndDebug and wndDebug.isVisible)then
-						closeDebug();
-					else
-						showExit();
-					end
-				else
-					showExit();
-				end
-			elseif(keyName == "enter") then
-				if(bWindow)then
-					if(wndInfo and wndInfo.isVisible)then
-						exitGame();
-					elseif(wndSetting and wndSetting.isVisible)then
-						closeOptions();
-					elseif(wndNew and wndNew.isVisible)then
-						newGame();
-					elseif(wndDebug and wndDebug.isVisible)then
-						closeDebug();
-					end
-				end
-			end
+		local phase = event.phase
+		local keyName = event.keyName
+		if(phase == 'up' and (keyName == "back" or keyName == "escape")) then
+			localGroup:removeAllListeners();
+			native.requestExit();
+			return true;
 		end
 		return false;
 	end
@@ -162,30 +208,6 @@ function new()
 	function localGroup:removeAllListeners()
 		Runtime:removeEventListener("touch", touchHandler);
 		Runtime:removeEventListener( "key", onKeyEvent )
-		if(wndSetting)then
-			wndSetting:removeAllListeners();
-			wndSetting = nil;
-		end
-		if(wndLang)then
-			wndLang:removeAllListeners();
-			wndLang = nil;
-		end
-		if(wndInfo)then
-			wndInfo:removeAllListeners();
-			wndInfo = nil;
-		end
-		if(wndNew)then
-			wndNew:removeAllListeners();
-			wndNew = nil;
-		end
-		if(wndDebug)then
-			wndDebug:removeAllListeners();
-			wndDebug = nil;
-		end
-		if(wndDifficulty)then
-			wndDifficulty:removeAllListeners();
-			wndDifficulty = nil;
-		end
 	end
 	
 	Runtime:addEventListener( "touch", touchHandler );

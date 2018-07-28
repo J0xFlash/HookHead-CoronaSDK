@@ -25,16 +25,21 @@ function new()
 	local _arrow = nil;
 	local _floorObj = nil;
 	local _wndOptions = nil;
+	local _wndGameOver = nil;
 	local _oldTime = getTimer();
 	local _timeGame = 0;
 	local _countTileY = 0;
+	local _countPlatformY = 6;
+	local _countWall = 0;
 	local _score = 0;
 	local _closeTime = 0;
 	local _levelTileY = 0;
 	local _levelPlatformY = 0;
 	local _levelWallY = 0;
-	local _offsetWallY = 400;
-	local _offsetPlatformY = 700;
+	local _minCountWall = 4;
+	local _speedGame = 1*scaleGraphics;
+	local _offsetWallY = 800*scaleGraphics;
+	local _offsetPlatformY = 700*scaleGraphics;
 	local _offsetFloor = 2500*scaleGraphics;
 	
 	localGroup:insert(gameGroup);
@@ -50,21 +55,35 @@ function new()
 	tfTitle.y = 400*scaleGraphics;
 	faceGroup:insert(tfTitle);
 	
-	local tfScore = createText(_score, 80*scaleGraphics, {1,1,1})
+	local bgScore = addObj("score");
+	bgScore.xScale = 0.65*scaleGraphics;
+	bgScore.yScale = bgScore.xScale;
+	bgScore.x = _W/2; 
+	bgScore.y = 120*scaleGraphics; 
+	faceGroup:insert(bgScore);
+	
+	local tfScore = createText(_score, 80*scaleGraphics, {128/255,137/255,137/255})
 	tfScore.x = _W/2;
 	tfScore.y = 100*scaleGraphics;
 	faceGroup:insert(tfScore);
 	
+	local function restartGame()
+		_G.options_pause = false;
+		localGroup:removeAllListeners();
+		showGame();
+	end
+	
+	local function closeGame()
+		_G.options_pause = false;
+		localGroup:removeAllListeners();
+		showMenu();
+	end
+	
 	local function closeOptions()
 		if(_wndOptions)then
 			_wndOptions.isVisible = false;
-			-- if(greenSounds:getMusicVol() < 0.05)then
-				-- musicStop();
-			-- end
-			-- greenSounds:saveSettings();
 		end
 		_G.options_pause = false;
-		-- _bWindow = false;
 		_closeTime = 100;
 	end
 	
@@ -73,8 +92,8 @@ function new()
 			return;
 		end
 		if(_wndOptions == nil)then
-			_wndOptions = require("src.WindowOptions").new(closeOptions);
-			_wndOptions.xScale = guiScale*mobileScale;
+			_wndOptions = require("src.WindowOptions").new(restartGame, closeGame);
+			_wndOptions.xScale = minScale*mobileScale;
 			_wndOptions.yScale = _wndOptions.xScale;
 			faceGroup:insert(_wndOptions);
 		end
@@ -85,6 +104,40 @@ function new()
 		
 		_bWindow = true;
 		_G.options_pause = true;
+	end
+	
+	local function closeGameOver()
+		if(_wndGameOver)then
+			_wndGameOver.isVisible = false;
+		end
+		_G.options_pause = false;
+		_closeTime = 100;
+	end
+	
+	local function showGameOver()
+		if(_bWindow)then
+			closeOptions();
+		end
+		
+		setItemCount("score", _score);
+		if(_score> getItemCount("scoreRecord"))then
+			setItemCount("scoreRecord", _score);
+		end
+		
+		if(_wndGameOver == nil)then
+			_wndGameOver = require("src.WindowGameOver").new(restartGame, closeGame);
+			_wndGameOver.xScale = minScale*mobileScale;
+			_wndGameOver.yScale = _wndGameOver.xScale;
+			faceGroup:insert(_wndGameOver);
+		end
+		
+		_wndGameOver.isVisible = true;
+		_wndGameOver.x = _W/2;
+		_wndGameOver.y = _H/2;
+		
+		saveData();
+		
+		_bWindow = true;
 	end
 	
 	local function createBackground()
@@ -121,7 +174,7 @@ function new()
 	local function createPlatform()
 		local posY = _levelPlatformY;
 		
-		for i=1, 6 do
+		for i=1, _countPlatformY do
 			local platform = addObj("floor_0" .. i);
 			scaleObjects(platform, scaleGraphics);
 			platform.w = platform.width*platform.xScale;
@@ -157,6 +210,8 @@ function new()
 	local function createSkinCharacter(value)
 		value = tostring(value);
 		_character["skin" .. value] = addObj("character_" .. value);
+		_character["skin" .. value].xScale = 0.5;
+		_character["skin" .. value].yScale = _character["skin" .. value].xScale;
 		_character:insert(_character["skin" .. value]);
 	end
 	
@@ -167,11 +222,11 @@ function new()
 		createSkinCharacter(3);
 		createSkinCharacter(4);
 		refreshSkinCharacter(3);
-		_character.xScale = 0.5;
+		_character.xScale = 1.5*scaleGraphics;
 		_character.yScale = _character.xScale;
 		_character.x = _W/2;
-		_character.y = _H - 300*scaleGraphics - _character.height/2;
-		_character.speed = 30;
+		_character.y = _H - 600*scaleGraphics - _character.height/2;
+		_character.speed = 45*scaleGraphics;
 		_character.xMov = 0;
 		_character.yMov = 0;
 		_character.move = false;
@@ -188,8 +243,8 @@ function new()
 	end
 	
 	local function createWall()
-		for i=1, 7 do
-			local count = 3 + math.floor(math.random()*3);
+		for i=1, 6 do
+			local count = _minCountWall + math.floor(math.random()*3);
 			local wall = require("src.ItemWall").new(i, count, i % 2);
 			wall.xScale = scaleGraphics;
 			wall.yScale = wall.xScale;
@@ -211,7 +266,7 @@ function new()
 	
 	local function createArrow()
 		_arrow = display.newGroup();
-		local scale = 0.75;
+		local scale = scaleGraphics;
 		local img = addObj("hook");
 		img.xScale = -1*scale;
 		img.yScale = scale;
@@ -227,7 +282,7 @@ function new()
 		scaleObjects(btnPause, 0.6*scaleGraphics)
 		btnPause.x = _W - btnPause.w/2 - 15*scaleGraphics;
 		btnPause.y = btnPause.h/2 + 15*scaleGraphics;
-		faceGroup:insert(btnPause)
+		localGroup:insert(btnPause)
 		table.insert(_arButtons, btnPause);
 	end
 	
@@ -241,6 +296,9 @@ function new()
 			end
 		end
 		refreshSkinCharacter(3);
+		_countWall = _countWall + 1;
+		
+		_speedGame = math.min((1 + _countWall/10)*scaleGraphics, 10*scaleGraphics);
 	end
 	
 	local function refreshArrow()
@@ -323,8 +381,14 @@ function new()
 			local wall = _arWalls[i];
 			if(wall.y + gameGroup.y > _H + wall.h)then
 				_levelWallY = _levelWallY + 1;
-				wall.h = wall.height*wall.yScale;
-				wall.y = _H - (_levelWallY-1)*_offsetWallY;
+				if(_countWall == 15)then
+					_minCountWall = 3;
+				elseif(_countWall == 50)then
+					_minCountWall = 2;
+				end
+				local count = _minCountWall + math.floor(math.random()*3);
+				wall:setSize(count);
+				wall.y = _H - _levelWallY*_offsetWallY;
 			end
 			
 			if(standart.hasCollidedRect(wall.rect, _character) and 
@@ -335,7 +399,6 @@ function new()
 				_character.wall = wall;
 				refreshCharacter();
 				refreshArrow();
-				break;
 			end
 		end
 	end
@@ -343,29 +406,45 @@ function new()
 	local function updatePlatforms()
 		for i=1,#_arPlatforms do
 			local wall = _arPlatforms[i];
-			if(wall.y + gameGroup.y > _H + wall.h)then
-				_levelPlatformY = _levelPlatformY + 1;
-				wall.h = wall.height*wall.yScale;
-				wall.y = _H - (_levelPlatformY-1)*_offsetPlatformY;
+			if(_bGameOver)then
+				if(wall.y + gameGroup.y < - wall.h)then
+					_levelPlatformY = _levelPlatformY - 1;
+					wall.y = _H - (_levelPlatformY-1)*_offsetPlatformY;
+				end
+			else
+				if(wall.y + gameGroup.y > _H + wall.h)then
+					_levelPlatformY = _levelPlatformY + 1;
+					wall.y = _H - (_levelPlatformY-1)*_offsetPlatformY;
+				end
 			end
 		end
 	end
 	
 	local function fallCharacter()
 		if (math.abs(standart.mathRound(_character.y) - _floorObj.y) > _character.h - 150*scaleGraphics)then
+			_character.x = _character.x + standart.mathRound(_character.xMov);
 			_character.y = _character.y + standart.mathRound(_character.yMov);
-			if (math.abs(standart.mathRound(_character.x) - _W/2) > _character.w/2)then
-				_character.x = _character.x + standart.mathRound(_character.xMov);
-			else
-				_character.x = _W/2;
-			end
 		else
 			refreshSkinCharacter(4);
+			showGameOver();
 		end
 		local _x, _y = _floorObj:localToContent(0, 0); -- localToGlobal
 		if(_y > _H - _floorObj.h/2 + _character.yMov)then
 			gameGroup.y = -_character.y + _posChar;
 		end
+	end
+	
+	local function gameOver()
+		_bGameOver = true;
+		_arrow.isVisible = false;
+		_levelPlatformY = _levelPlatformY - _countPlatformY + 1;
+		_levelTileY = _levelTileY + _countTileY - 1;
+		refreshSkinCharacter(2);
+		local angle = math.atan2((_H- 200*scaleGraphics)-(_character.y), _W/2-(_character.x));
+		local cosAngle = math.cos(angle);
+		local sinAngle = math.sin(angle);
+		_character.xMov = (_character.speed)*cosAngle;
+		_character.yMov = (_character.speed)*sinAngle;
 	end
 	
 	local function moveCharacter()
@@ -374,8 +453,11 @@ function new()
 			return;
 		end
 		
+		gameGroup.y = gameGroup.y + _speedGame;
 		if(_character.move == false)then
-			-- gameGroup.y = gameGroup.y + 1*scaleGraphics;
+			if(math.ceil(_posChar - gameGroup.y - _character.y) < -math.ceil(_H - _posChar + _character.h/2))then
+				gameOver();
+			end
 			return;
 		end
 		
@@ -384,19 +466,16 @@ function new()
 		
 		_character.x = _character.x + standart.mathRound(_character.xMov);
 		_character.y = _character.y + standart.mathRound(_character.yMov);
-		gameGroup.y = -_character.y + _posChar;
-		_floorObj.y = _character.y + _offsetFloor;
+		
+		if(math.ceil(_posChar - gameGroup.y) < math.ceil(_character.y))then
+			
+		else
+			gameGroup.y = -_character.y + _posChar;
+			_floorObj.y = _character.y + _offsetFloor;
+		end
 		
 		if(_character.x < _character.w/2 or _character.x > _W - _character.w/2)then
-			_bGameOver = true;
-			_arrow.isVisible = false;
-			_levelTileY = _levelTileY + _countTileY - 1;
-			refreshSkinCharacter(2);
-			local angle = math.atan2((_H- 200*scaleGraphics)-(_character.y), _W/2-(_character.x));
-			local cosAngle = math.cos(angle);
-			local sinAngle = math.sin(angle);
-			_character.xMov = (_character.speed/5)*cosAngle;
-			_character.yMov = (_character.speed)*sinAngle;
+			gameOver();
 		end
 	end
 	
@@ -456,7 +535,7 @@ function new()
 	-------------- touchHandler ----------------
 	local function checkButtons(event)
 		if(_bWindow)then
-			return;
+			-- return;
 		end
 		for i=1,#_arButtons do
 			local item_mc = _arButtons[i];
@@ -528,44 +607,21 @@ function new()
 	end
 	
 	local function onKeyEvent(event)
-	   local phase = event.phase
-	   local keyName = event.keyName
-	   local nativeKeyCode = event.nativeKeyCode;
-	   local isShiftDown = event.isShiftDown;
+		local phase = event.phase
+		local keyName = event.keyName
+		local nativeKeyCode = event.nativeKeyCode;
+		local isShiftDown = event.isShiftDown;
 		if(phase == 'up') then
-			-- print("nativeKeyCode:", nativeKeyCode, keyName)
-			if(isShiftDown and keyName == "`") then
-				if(bDebug)then
-					closeDebug();
-				else
-					showDebug();
-				end
-			elseif(keyName == "escape" or keyName == "back") then
+			if(keyName == "escape" or keyName == "back") then
 				if(_bWindow)then
-					if(wndInfo and wndInfo.isVisible)then
-						hideExit();
-					elseif(wndSetting and wndSetting.isVisible)then
+					if(_wndOptions and _wndOptions.isVisible)then
 						closeOptions();
-					elseif(wndNew and wndNew.isVisible)then
-						hideNewGame();
-					elseif(wndDebug and wndDebug.isVisible)then
-						closeDebug();
-					else
-						showExit();
+						return true;
 					end
 				else
-					showExit();
-				end
-			elseif(keyName == "enter") then
-				if(_bWindow)then
-					if(wndInfo and wndInfo.isVisible)then
-						exitGame();
-					elseif(wndSetting and wndSetting.isVisible)then
-						closeOptions();
-					elseif(wndNew and wndNew.isVisible)then
-						newGame();
-					elseif(wndDebug and wndDebug.isVisible)then
-						closeDebug();
+					if(_wndOptions and _wndOptions.isVisible == false)then
+						clickOptions();
+						return true;
 					end
 				end
 			end
@@ -573,17 +629,17 @@ function new()
 		return false;
 	end
 	
-	function gameOver()
-		localGroup:removeAllListeners();
-		showMenu();
-	end
-	
 	function localGroup:removeAllListeners()
+		Runtime:removeEventListener( "enterFrame", update );
 		Runtime:removeEventListener("touch", touchHandler);
 		Runtime:removeEventListener( "key", onKeyEvent )
-		if(wndSetting)then
-			wndSetting:removeAllListeners();
-			wndSetting = nil;
+		if(_wndOptions)then
+			_wndOptions:removeAllListeners();
+			_wndOptions = nil;
+		end
+		if(_wndGameOver)then
+			_wndGameOver:removeAllListeners();
+			_wndGameOver = nil;
 		end
 	end
 	

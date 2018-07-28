@@ -1,6 +1,11 @@
 ﻿<lang
 	back="BACK"
+	game_over="Game Over"
 	loading="Loading"
 	options="Options"
 	start="START"
+	your_score="Your score"
+	
+	dev_sergey_pomorin="Sergey Pomorin"
+	dev_evgeny_titov="Evgeny Titov"
 />

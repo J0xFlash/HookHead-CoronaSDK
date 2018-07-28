@@ -39,6 +39,22 @@ print("WxH: ".._W.."x".._H);
 -- data user
 login_obj = {};
 
+-- Init Game Center
+globalData = require("src.globalData");
+globalData.gpgs = nil
+globalData.gameCenter = nil
+licensing = nil
+
+local platform = system.getInfo( "platform" )
+local env = system.getInfo( "environment" )
+ 
+if ( platform == "android" and env ~= "simulator" ) then
+    globalData.gpgs = require( "plugin.gpgs" )
+	licensing = require( "licensing" );
+elseif ( platform == "ios" and env ~= "simulator" ) then
+    globalData.gameCenter = require( "gameNetwork" )
+end
+
 ---- import source
 director = require("director");
 json = require("json");
@@ -97,7 +113,7 @@ function refreshScaleGraphics()
 		screenLoader.xScale = scaleGraphics;
 		screenLoader.yScale = scaleGraphics;
 	end
-	-- print("minScale:", minScale, "maxScale:", maxScale, "guiScale:", guiScale);
+	print("minScale:", minScale, "maxScale:", maxScale, "guiScale:", guiScale);
 end
 refreshScaleGraphics();
 
