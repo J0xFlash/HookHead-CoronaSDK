@@ -12,25 +12,33 @@ function new()
 	
 	local ANGLE = 60;
 	local SCORE = 1;
+	local TIME_SPEED_MAX = 3000;
+	local TIME_TORCH = 15000;
+	local TIME_SAW = 9000;
 	
 	local _arButtons = {};
 	local _arWalls = {};
 	local _arTiles = {};
+	local _arImgTiles = {};
 	local _arPlatforms = {};
+	local _gameObj = {};
 	local _bWindow = false; -- открыто окно или нет
 	local _bArrow = false;
 	local _bGameOver = false;
 	local _character = nil;
 	local _posChar = 0;
 	local _arrow = nil;
+	local _torch = nil;
+	local _saw = nil;
 	local _floorObj = nil;
 	local _wndOptions = nil;
 	local _wndGameOver = nil;
 	local _oldTime = getTimer();
 	local _timeGame = 0;
+	local _timeTorch = 0;
+	local _timeSaw = 0;
 	local _countTileY = 0;
 	local _countPlatformY = 6;
-	local _countWall = 0;
 	local _score = 0;
 	local _closeTime = 0;
 	local _levelTileY = 0;
@@ -38,7 +46,7 @@ function new()
 	local _levelWallY = 0;
 	local _minCountWall = 4;
 	local _speedGame = 1*scaleGraphics;
-	local _offsetWallY = 800*scaleGraphics;
+	local _offsetWallY = 600*scaleGraphics;
 	local _offsetPlatformY = 700*scaleGraphics;
 	local _offsetFloor = 2500*scaleGraphics;
 	
@@ -114,7 +122,78 @@ function new()
 		_closeTime = 100;
 	end
 	
+	local function refreshSkinCharacter(value)
+		value = tostring(value);
+		_character.skin1.isVisible = false;
+		_character.skin2.isVisible = false;
+		_character.skin3.isVisible = false;
+		_character.skin4.isVisible = false;
+		_character["skin" .. value].isVisible = true;
+	end
+	
+	local function submitScoreListener( event )
+		
+		-- Google Play Games Services score submission
+		if ( globalData.gpgs ) then
+			if not event.isError then
+				local isBest = nil
+				if ( event.scores["daily"].isNewBest ) then
+					isBest = "a daily"
+				elseif ( event.scores["weekly"].isNewBest ) then
+					isBest = "a weekly"
+				elseif ( event.scores["all time"].isNewBest ) then
+					isBest = "an all time"
+				end
+				if isBest then
+					-- Congratulate player on a high score
+					-- local message = "You set " .. isBest .. " high score!"
+					-- native.showAlert( "Congratulations", message, { "OK" } )
+				else
+					-- Encourage the player to do better
+					-- native.showAlert( "Sorry...", "Better luck next time!", { "OK" } )
+				end
+			end
+	 
+		-- Apple Game Center score submission
+		elseif ( globalData.gameCenter ) then
+	 
+			if ( event.type == "setHighScore" ) then
+				-- Congratulate player on a high score
+				-- native.showAlert( "Congratulations", "You set a high score!", { "OK" } )
+			else
+				-- Encourage the player to do better
+				native.showAlert( "Sorry...", "Better luck next time!", { "OK" } )
+			end
+		end
+	end
+	
+	local function submitScore( score )
+		if ( globalData.gpgs ) then
+			-- Submit a score to Google Play Games Services
+			globalData.gpgs.leaderboards.submit(
+			{
+				leaderboardId = "CgkI0POrzdITEAIQDA",
+				score = score,
+				listener = submitScoreListener
+			})
+	 
+		elseif ( globalData.gameCenter ) then
+			-- Submit a score to Apple Game Center
+			globalData.gameCenter.request( "setHighScore",
+			{
+				localPlayerScore = {
+					category = "com.yourdomain.yourgame.leaderboard",
+					value = score
+				},
+				listener = submitScoreListener
+			})
+		end
+	end
+	
 	local function showGameOver()
+		if(_wndGameOver and _wndGameOver.isVisible)then
+			return;
+		end
 		if(_bWindow)then
 			closeOptions();
 		end
@@ -122,6 +201,17 @@ function new()
 		setItemCount("score", _score);
 		if(_score> getItemCount("scoreRecord"))then
 			setItemCount("scoreRecord", _score);
+		end
+		submitScore(_score);
+		addItemCount("countDeath", 1);
+		soundPlay("soundDie");
+		refreshSkinCharacter(4);
+		
+		if(_score >= 500)then
+			itemAchievement:createAchievement(9);
+		end
+		if(_score >= 2500)then
+			itemAchievement:createAchievement(10);
 		end
 		
 		if(_wndGameOver == nil)then
@@ -136,6 +226,10 @@ function new()
 		_wndGameOver.y = _H/2;
 		
 		saveData();
+		
+		if(initAppodeal)then
+			appodeal.show( "banner", { yAlign="bottom" } )
+		end
 		
 		_bWindow = true;
 	end
@@ -163,6 +257,7 @@ function new()
 				tile.y = 0;
 				tileGroup:insert(tile);
 				posX = posX + 1;
+				table.insert(_arImgTiles, tile);
 			end
 			tileGroup.y = tileGroup.height*posY;
 			backGroup:insert(tileGroup);
@@ -198,13 +293,134 @@ function new()
 		_levelPlatformY = posY;
 	end
 	
-	local function refreshSkinCharacter(value)
-		value = tostring(value);
-		_character.skin1.isVisible = false;
-		_character.skin2.isVisible = false;
-		_character.skin3.isVisible = false;
-		_character.skin4.isVisible = false;
-		_character["skin" .. value].isVisible = true;
+	local function pauseGame()
+		if(options_pause)then
+			closeOptions();
+		else
+			clickOptions();
+		end
+	end
+	
+	local function filterGame(value)
+		for i=1,#_arImgTiles do
+			local obj = _arImgTiles[i];
+			if(value)then
+				obj.fill.effect = "filter.exposure"
+				obj.fill.effect.exposure = 1.2
+			else
+				obj.fill.effect = nil;
+			end
+		end
+		for i=1,#_arPlatforms do
+			local obj = _arPlatforms[i];
+			if(value)then
+				obj.fill.effect = "filter.exposure"
+				obj.fill.effect.exposure = 1.2
+			else
+				obj.fill.effect = nil;
+			end
+		end
+		for i=1,#_arWalls do
+			local obj = _arWalls[i];
+			obj:invertFilter(value);
+		end
+	end
+	
+	local function addTorch()
+		if(_bGameOver)then
+			return;
+		end
+		if(_torch == nil)then
+			_torch = addObj("torch");
+			scaleObjects(_torch, scaleGraphics);
+			gameGroup:insert(_torch);
+		end
+		
+		_torch.x = _W/2;
+		_torch.y = _character.y - _H;
+		_torch.maxY = _torch.y + 100*scaleGraphics;
+		_torch.minY = _torch.y - 100*scaleGraphics;
+		_torch.vectorY = 1;
+		_torch.speed = 5*scaleGraphics;
+		_torch.isVisible = true;
+		_torch.enabled = true;
+		_timeTorch = TIME_TORCH + math.ceil(math.random()*5000);
+		_timeSaw = TIME_SAW + math.ceil(math.random()*2000);
+	end
+	
+	local function hitTorch()
+		local targetWall = _arWalls[_character.wall.id+1] or _arWalls[1];
+		local angle = math.atan2(targetWall.y-_character.y, targetWall.x-_character.x);
+		local cosAngle = math.cos(angle);
+		local sinAngle = math.sin(angle);
+		_torch.isVisible = false;
+		_torch.enabled = false;
+		_character.speed = _character.speedMax;
+		_character.xMov = (_character.speed)*cosAngle;
+		_character.yMov = (_character.speed)*sinAngle;
+		_character.timeMax = TIME_SPEED_MAX;
+		_gameObj["countTorch"] = _gameObj["countTorch"] + 1;
+		soundPlay("soundTorch");
+		filterGame(true);
+		
+		if(_gameObj["countTorch"] >=15)then
+			itemAchievement:createAchievement(2);
+		elseif(_gameObj["countTorch"] >=5)then
+			itemAchievement:createAchievement(1);
+		elseif(_gameObj["countTorch"] >=1)then
+			itemAchievement:createAchievement(6);
+		end
+	end
+	
+	local function gameOver()
+		_bGameOver = true;
+		_arrow.isVisible = false;
+		_levelPlatformY = _levelPlatformY - _countPlatformY + 1;
+		_levelTileY = _levelTileY + _countTileY - 1;
+		refreshSkinCharacter(2);
+		local angle = math.atan2((_character.y - 50*scaleGraphics)-(_character.y), _W/2-(_character.x));
+		local cosAngle = math.cos(angle);
+		local sinAngle = math.sin(angle);
+		_character.status = 1;
+		_character.speed = 70*scaleGraphics;
+		_character.xMov = (_character.speed)*cosAngle;
+		_character.yMov = (_character.speed)*sinAngle;
+	end
+	
+	local function addSaw()
+		if(_bGameOver or (_saw and _saw.enabled))then
+			return;
+		end
+		if(_saw == nil)then
+			_saw = addObj("saw");
+			gameGroup:insert(_saw);
+		end
+		
+		local scale = (math.random()*0.3+ 0.7)*scaleGraphics;
+		scaleObjects(_saw, scale);
+		_saw.w = _saw.width*_saw.xScale;
+		_saw.h = _saw.height*_saw.yScale;
+		_saw.r = _saw.w/2;
+		_saw.rr = _saw.r*_saw.r;
+		
+		_saw.x = _W/2;
+		_saw.y = _character.y - _H - _saw.h/2;
+		_saw.maxY = _saw.y + _H/2;
+		_saw.minY = _saw.y - _H/2;
+		_saw.vectorY = 1;
+		_saw.speed = 15*scaleGraphics;
+		_saw.isVisible = true;
+		_saw.enabled = true;
+		_timeSaw = TIME_SAW + math.ceil(math.random()*2000);
+	end
+	
+	local function hitSaw()
+		_gameObj["countSaw"] = _gameObj["countSaw"] + 1;
+		if(_gameObj["countSaw"] >= 1)then
+			itemAchievement:createAchievement(7);
+		end
+		soundPlay("soundSaw");
+		gameOver();
 	end
 	
 	local function createSkinCharacter(value)
@@ -226,9 +442,13 @@ function new()
 		_character.yScale = _character.xScale;
 		_character.x = _W/2;
 		_character.y = _H - 600*scaleGraphics - _character.height/2;
-		_character.speed = 45*scaleGraphics;
+		_character.speedMax = 180*scaleGraphics;
+		_character.timeMax = 0;
+		_character.speedNormal = 90*scaleGraphics;
+		_character.speed = _character.speedNormal;
 		_character.xMov = 0;
 		_character.yMov = 0;
+		_character.status = 0;
 		_character.move = false;
 		_character.w = _character.width*_character.xScale;
 		_character.h = _character.height*_character.yScale;
@@ -274,7 +494,7 @@ function new()
 		_arrow:insert(img);
 		gameGroup:insert(_arrow);
 		
-		_arrow.speed = 1.5;
+		_arrow.speed = 3;
 	end
 	
 	local function createButtons()
@@ -296,9 +516,20 @@ function new()
 			end
 		end
 		refreshSkinCharacter(3);
-		_countWall = _countWall + 1;
+		_gameObj["countWall"] = _gameObj["countWall"] + 1;
+		if(_gameObj["countWall"] >= 50)then
+			itemAchievement:createAchievement(5);
+		elseif(_gameObj["countWall"] >= 25)then
+			itemAchievement:createAchievement(4);
+		elseif(_gameObj["countWall"] >= 1)then
+			itemAchievement:createAchievement(3);
+		end
 		
-		_speedGame = math.min((1 + _countWall/10)*scaleGraphics, 10*scaleGraphics);
+		if(_character.y > wall.y + (wall.rect.height/2-25)*scaleGraphics)then
+			itemAchievement:createAchievement(11);
+		end
+		
+		_speedGame = math.min((1 + _gameObj["countWall"]/10)*scaleGraphics, 5*scaleGraphics);
 	end
 	
 	local function refreshArrow()
@@ -309,6 +540,7 @@ function new()
 		_arrow.y = _character.y;
 		_arrow.isVisible = true;
 		_arrow.rotation = 0;
+		
 		if(_character.x > _W/2)then
 			_arrow.xScale = -1;
 		else
@@ -318,6 +550,10 @@ function new()
 	end
 	
 	local function init()
+		_gameObj["countTorch"] = 0;
+		_gameObj["countSaw"] = 0;
+		_gameObj["countWall"] = 0;
+		
 		createBackground();
 		createPlatform();
 		createWall();
@@ -325,17 +561,12 @@ function new()
 		createCharacter();
 		refreshArrow();
 		createButtons();
+		
+		_timeTorch = TIME_TORCH + math.ceil(math.random()*5000);
+		_timeSaw = TIME_SAW + math.ceil(math.random()*2000);
 	end
 	
 	init();
-	
-	local function pauseGame()
-		if(options_pause)then
-			closeOptions();
-		else
-			clickOptions();
-		end
-	end
 	
 	local function touchCharacter(event)
 		if (options_pause or _bGameOver) then
@@ -350,13 +581,14 @@ function new()
 		_character.move = true;
 		_arrow.isVisible = false;
 		refreshSkinCharacter(1);
+		soundPlay("soundHook");
 	end
 	
 	local function updateTiles()
 		for i=1,#_arTiles do
 			local tile = _arTiles[i];
 			if(_bGameOver)then
-				if(tile.y + gameGroup.y <  - tile.height)then
+				if(tile.y + gameGroup.y < - tile.height)then
 					_levelTileY = _levelTileY + 1;
 					tile.y = tile.height*_levelTileY;
 				end
@@ -377,16 +609,21 @@ function new()
 	end
 	
 	local function updateWalls()
+		local nextWall = nil;
 		for i=1,#_arWalls do
 			local wall = _arWalls[i];
+			
 			if(wall.y + gameGroup.y > _H + wall.h)then
 				_levelWallY = _levelWallY + 1;
-				if(_countWall == 15)then
+				local addCount = 0;
+				if(_gameObj["countWall"] == 15)then
 					_minCountWall = 3;
-				elseif(_countWall == 50)then
+					addCount = 1;
+				elseif(_gameObj["countWall"] == 50)then
 					_minCountWall = 2;
+					addCount = 2;
 				end
-				local count = _minCountWall + math.floor(math.random()*3);
+				local count = _minCountWall + math.floor(math.random()*(3+addCount));
 				wall:setSize(count);
 				wall.y = _H - _levelWallY*_offsetWallY;
 			end
@@ -394,12 +631,27 @@ function new()
 			if(standart.hasCollidedRect(wall.rect, _character) and 
 			wall.char == false and _bGameOver == false)then
 				refreshWalls();
-				wall.char = true;
-				_character.move = false;
-				_character.wall = wall;
-				refreshCharacter();
-				refreshArrow();
+				if(_character.timeMax > 0)then
+					nextWall = _arWalls[i+1] or _arWalls[1];
+				else
+					wall.char = true;
+					_character.move = false;
+					_character.wall = wall;
+					refreshCharacter();
+					refreshArrow();
+				end
 			end
+		end
+		
+		if(_character.timeMax > 0 and nextWall)then
+			local angle = math.atan2(nextWall.y-_character.y, nextWall.x-_character.x);
+			local cosAngle = math.cos(angle);
+			local sinAngle = math.sin(angle);
+			_character.xMov = (_character.speed)*cosAngle;
+			_character.yMov = (_character.speed)*sinAngle;
+			_character.move = true;
+			_arrow.isVisible = false;
+			refreshSkinCharacter(1);
 		end
 	end
 	
@@ -420,31 +672,72 @@ function new()
 		end
 	end
 	
-	local function fallCharacter()
-		if (math.abs(standart.mathRound(_character.y) - _floorObj.y) > _character.h - 150*scaleGraphics)then
-			_character.x = _character.x + standart.mathRound(_character.xMov);
-			_character.y = _character.y + standart.mathRound(_character.yMov);
-		else
-			refreshSkinCharacter(4);
-			showGameOver();
+	local function updateSaw()
+		if(_bGameOver)then
+			return;
 		end
+		if(_saw)then
+			_saw.rotation = _saw.rotation - 5;
+			_saw.y = _saw.y + _saw.speed * _saw.vectorY;
+			if(_saw.y > _saw.maxY)then
+				_saw.vectorY = -1;
+			end
+			if(_saw.y < _saw.minY)then
+				_saw.vectorY = 1;
+			end
+			if(_saw.y > _character.y + _H/2)then
+				_saw.enabled = false;
+				_saw.isVisible = false;
+			end
+		end
+	end
+	
+	local function updateTorch()
+		if(_bGameOver)then
+			return;
+		end
+		if(_torch)then
+			_torch.y = _torch.y + _torch.speed * _torch.vectorY;
+			if(_torch.y > _torch.maxY)then
+				_torch.vectorY = -1;
+			end
+			if(_torch.y < _torch.minY)then
+				_torch.vectorY = 1;
+			end
+			if(_torch.y > _character.y + _H/2)then
+				_torch.enabled = false;
+				_torch.isVisible = false;
+			end
+		end
+	end
+	
+	local function fallCharacter()
+		if(_character.status == 1)then
+			if (math.abs(standart.mathRound(_character.x) - _W/2) > 50*scaleGraphics)then
+				_character.x = _character.x + standart.mathRound(_character.xMov);
+				_character.y = _character.y + standart.mathRound(_character.yMov);
+			else
+				_character.status = 2;
+				_character.speed = _character.speedNormal;
+				local angle = math.atan2((_H- 200*scaleGraphics)-(_character.y), _W/2-(_character.x));
+				local cosAngle = math.cos(angle);
+				local sinAngle = math.sin(angle);
+				_character.xMov = (_character.speed)*cosAngle;
+				_character.yMov = (_character.speed)*sinAngle;
+			end
+		elseif(_character.status == 2)then
+			if (math.abs(standart.mathRound(_character.y) - _floorObj.y) > _character.h - 150*scaleGraphics)then
+				_character.x = _character.x + standart.mathRound(_character.xMov);
+				_character.y = _character.y + standart.mathRound(_character.yMov);
+			else
+				showGameOver();
+			end
+		end
+		
 		local _x, _y = _floorObj:localToContent(0, 0); -- localToGlobal
 		if(_y > _H - _floorObj.h/2 + _character.yMov)then
 			gameGroup.y = -_character.y + _posChar;
 		end
-	end
-	
-	local function gameOver()
-		_bGameOver = true;
-		_arrow.isVisible = false;
-		_levelPlatformY = _levelPlatformY - _countPlatformY + 1;
-		_levelTileY = _levelTileY + _countTileY - 1;
-		refreshSkinCharacter(2);
-		local angle = math.atan2((_H- 200*scaleGraphics)-(_character.y), _W/2-(_character.x));
-		local cosAngle = math.cos(angle);
-		local sinAngle = math.sin(angle);
-		_character.xMov = (_character.speed)*cosAngle;
-		_character.yMov = (_character.speed)*sinAngle;
 	end
 	
 	local function moveCharacter()
@@ -467,6 +760,16 @@ function new()
 		_character.x = _character.x + standart.mathRound(_character.xMov);
 		_character.y = _character.y + standart.mathRound(_character.yMov);
 		
+		if(_torch and standart.hasCollidedRect(_torch, _character) and
+		_bGameOver == false and _torch.enabled)then
+			hitTorch();
+		end
+		
+		if(_saw and standart.hitTest(_saw,_saw.rr,_character.x,_character.y) and
+		_bGameOver == false and _saw.enabled and _character.timeMax < 1)then
+			hitSaw();
+		end
+		
 		if(math.ceil(_posChar - gameGroup.y) < math.ceil(_character.y))then
 			
 		else
@@ -474,7 +777,7 @@ function new()
 			_floorObj.y = _character.y + _offsetFloor;
 		end
 		
-		if(_character.x < _character.w/2 or _character.x > _W - _character.w/2)then
+		if(_character.x < 0 or _character.x > _W)then
 			gameOver();
 		end
 	end
@@ -519,8 +822,32 @@ function new()
 		updateTiles();
 		updateWalls();
 		updatePlatforms();
+		updateSaw();
+		updateTorch();
 		rotationArrow();
 		moveCharacter();
+		
+		if(_character.timeMax > 0)then
+			_character.timeMax = _character.timeMax - diffTime;
+			if(_character.timeMax < 0)then
+				_character.speed = _character.speedNormal;
+				filterGame(false);
+			end
+		end
+		
+		if(_timeTorch > 0)then
+			_timeTorch = _timeTorch- diffTime;
+			if(_timeTorch < 0)then
+				addTorch();
+			end
+		end
+		
+		if(_timeSaw > 0 and _character.timeMax < 1)then
+			_timeSaw = _timeSaw- diffTime;
+			if(_timeSaw < 0)then
+				addSaw();
+			end
+		end
 		
 		if(_closeTime > 0)then
 			_closeTime = _closeTime - diffTime;
@@ -640,6 +967,9 @@ function new()
 		if(_wndGameOver)then
 			_wndGameOver:removeAllListeners();
 			_wndGameOver = nil;
+		end
+		if(initAppodeal)then
+			appodeal.hide("banner")
 		end
 	end
 	

@@ -13,14 +13,17 @@ function new(_id, _count, _type)
 		side = "Right";
 	end
 	local size = 248*scale;
+	local invert = false;
+	local exposure = 1.2;
 	
 	movieclip:insert(blockGroup);
 	
-	local rect = display.newRect( 0, 0, size/2, size*_count )
+	local rect = display.newRect( 0, 0, size, size*(_count-1) )
 	rect:setFillColor(1,0,0, 0.5);
 	rect.isVisible = false;
 	movieclip:insert(rect);
 	movieclip.rect = rect;
+	movieclip.id = _id;
 	
 	function movieclip:setSize(value)
 		_count = value;
@@ -39,6 +42,10 @@ function new(_id, _count, _type)
 			wallMiddle.yScale = scale;
 			wallMiddle.y = wallTop.y + size*i; 
 			blockGroup:insert(wallMiddle);
+			if(invert)then
+				wallMiddle.fill.effect = "filter.exposure"
+				wallMiddle.fill.effect.exposure = exposure
+			end
 		end
 		local wallDown = addObj("wall"..side.."Down");
 		wallDown.xScale = scale;
@@ -46,7 +53,27 @@ function new(_id, _count, _type)
 		wallDown.y = wallTop.y + size*(_count + 1); 
 		blockGroup:insert(wallDown);
 		
-		rect.height = size*_count;
+		if(invert)then
+			wallTop.fill.effect = "filter.exposure"
+			wallTop.fill.effect.exposure = exposure
+			wallDown.fill.effect = "filter.exposure"
+			wallDown.fill.effect.exposure = exposure
+		end
+		
+		rect.height = size*(_count-1);
+	end
+	
+	function movieclip:invertFilter(value)
+		invert = value;
+		for i=1, blockGroup.numChildren do
+			local obj = blockGroup[i];
+			if(value)then
+				obj.fill.effect = "filter.exposure"
+				obj.fill.effect.exposure = exposure
+			else
+				obj.fill.effect = nil;
+			end
+		end
 	end
 	
 	movieclip:setSize(_count);

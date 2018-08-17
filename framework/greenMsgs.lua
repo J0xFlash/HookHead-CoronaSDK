@@ -7,18 +7,19 @@ function new()
 	local old_time = system.getTimer();
 	
 	function _mc:show_msg(txt)
-		local dtxt = display.newText( txt, 0, 0, nil, 16*scaleGraphics);
-		dtxt.x = dtxt.width/2;
+		local bgH = 40*scaleGraphics
+		local dtxt = display.newText( txt, 0, 0, nil, 32*scaleGraphics);
+		dtxt.x = dtxt.width/2 + 200*scaleGraphics;
 		dtxt:setFillColor(1, 1, 1);
 
-		local dark_mc = display.newRect( 0, 0, dtxt.width, 30);
-		dark_mc.x = dark_mc.width/2;
+		local dark_mc = display.newRect( 0, 0, dtxt.width, bgH);
+		dark_mc.x = dark_mc.width/2 + 200*scaleGraphics;
 		dark_mc:setFillColor(0,0,0);
 		dark_mc.alpha = 0.8;
 		
 		local msg_mc=display.newGroup();
 		msg_mc.ttl = 6000+#_list*500;
-		msg_mc.y = #_list*30;
+		msg_mc.y = #_list*bgH;
 		msg_mc:insert(dark_mc);
 		msg_mc:insert(dtxt);
 		

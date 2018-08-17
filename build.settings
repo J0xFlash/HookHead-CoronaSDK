@@ -20,9 +20,8 @@ settings =
 	{
 		usesPermissions =
 		{
-			"android.permission.INTERNET",
-			"android.permission.ACCESS_NETWORK_STATE",
-            "com.android.vending.CHECK_LICENSE"
+			--"android.permission.INTERNET",
+			--"android.permission.ACCESS_NETWORK_STATE",
 		},
 		supportsScreens =
 			{
@@ -31,7 +30,7 @@ settings =
 				largeScreens  = true,
 				xlargeScreens = true,
 			},
-		--googlePlayGamesAppId = "713515796806",
+		googlePlayGamesAppId = "ID",
 	},
 
 	--
@@ -60,6 +59,25 @@ settings =
             publisherId = "com.coronalabs",
             supportedPlatforms = { android=true }
         },
+		["plugin.appodeal"] =
+        {
+            publisherId = "com.coronalabs"
+        },
+		-- Base
+		['plugin.appodeal.base'] = { publisherId = 'com.coronalabs' },
+		['plugin.appodeal.AmazonAds'] = { publisherId = 'com.coronalabs' },
+		['plugin.appodeal.GoogleAdMob'] = { publisherId = 'com.coronalabs' },
+		['plugin.appodeal.TwitterMoPub'] = { publisherId = 'com.coronalabs' },
+		['plugin.appodeal.StartApp'] = { publisherId = 'com.coronalabs' },
+		 
+		-- Banner
+		['plugin.appodeal.AppLovin'] = { publisherId = 'com.coronalabs' },
+		['plugin.appodeal.FacebookAudience'] = { publisherId = 'com.coronalabs' },
+		['plugin.appodeal.Flurry'] = { publisherId = 'com.coronalabs' },
+		['plugin.appodeal.InMobi'] = { publisherId = 'com.coronalabs' },
+		['plugin.appodeal.MyTarget'] = { publisherId = 'com.coronalabs' },
+		['plugin.appodeal.Yandex'] = { publisherId = 'com.coronalabs' },
+		
 	},
 
 	--

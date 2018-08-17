@@ -30,7 +30,7 @@ function new()
 	local _sounds_on = true;
 	local _musics_on = true;
 	local _sounds_vol = 1;
-	local _musics_vol = 1;
+	local _musics_vol = 0.45;
 	local _last_music = nil;
 	
 	local _sounds = {};
@@ -63,7 +63,7 @@ function new()
 				_sounds_on=settings._sounds_on;
 				_musics_on=settings._musics_on;
 				_sounds_vol=settings._sounds_vol or 1;
-				_musics_vol=settings._musics_vol or 1;
+				_musics_vol=--[[settings._musics_vol or]] 0.45;
 			end
 		else
 			if(optionsBuild == "nook")then
@@ -125,6 +125,7 @@ function new()
 	function _mc:switchMusic()
 		local val = (_musics_on == false);
 		_mc:setMusicBol(val);
+		_mc:setSoundBol(val)
 		return _musics_on;
 	end
 	
@@ -169,6 +170,9 @@ function new()
 			_mc:music_stop();
 			if(_sounds[val])then
 				_backgroundMusic = audio.play( _sounds[val], { channel=idM, loops=-1 });
+				
+				audio.setVolume( _musics_vol, { channel=idM } )
+				print("__music_play:_musics_vol:",_musics_vol)
 				-- print("__music_play:backgroundMusic:",_backgroundMusic)
 			end
 		end

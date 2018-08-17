@@ -55,16 +55,43 @@ function new()
 	table.insert(arButtons, btnSound);
 	local btnGoogle = addButtonTexture("btnGoogle");
 	scaleObjects(btnGoogle, 0.6*scaleGraphics)
+	btnGoogle.isVisible = false;
 	btnGoogle.x = btnSoundOff.x;
 	btnGoogle.y = btnSoundOff.y - btnSoundOff.h/2 - btnGoogle.h/2 - 50*scaleGraphics;
+	btnGoogle.isVisible = false;
 	faceGroup:insert(btnGoogle)
 	table.insert(arButtons, btnGoogle);
+	local btnLeaderboards = addButtonTexture("btnLead");
+	scaleObjects(btnLeaderboards, 0.6*scaleGraphics)
+	btnLeaderboards.x = _W - btnLeaderboards.w/2 - 25*scaleGraphics;
+	btnLeaderboards.y = btnSound.y - btnLeaderboards.h - 25*scaleGraphics;
+	btnLeaderboards.isVisible = false;
+	faceGroup:insert(btnLeaderboards)
+	table.insert(arButtons, btnLeaderboards);
+	local btnAchievements = addButtonTexture("btnAch");
+	scaleObjects(btnAchievements, 0.6*scaleGraphics)
+	btnAchievements.x = _W - btnAchievements.w/2 - 25*scaleGraphics;
+	btnAchievements.y = btnLeaderboards.y - btnAchievements.h - 25*scaleGraphics;
+	btnAchievements.isVisible = false;
+	faceGroup:insert(btnAchievements)
+	table.insert(arButtons, btnAchievements);
 	
 	local function refreshSound()
 		btnSoundOff.isVisible = (greenSounds:getMusicBol() == false);
 		btnSound.isVisible = greenSounds:getMusicBol();
 	end
 	refreshSound();
+	
+	local function showLeaderbords()
+		if(globalData.gpgs)then
+			local params = {
+				leaderboardId = "CgkI0POrzdITEAIQDA",
+				friendsOnly = false,
+				timeSpan = "all time", -- "all time", "weekly", "daily"
+			}
+			globalData.gpgs.leaderboards.show( params )
+		end
+	end
 	
 	local function gpgsInitListener( event1 )
 		if not event1.isError then
@@ -81,11 +108,12 @@ function new()
 							globalData.gpgs.players.load({
 								listener = function(event3)
 									if not event3.isError then
+										initGC = true;
 										_G.login_obj['google_user'] = event3.players[1];
 										_G.login_obj['google_user_id'] = event3.players[1].id;
 										_G.login_obj['google_user_name'] = event3.players[1].name;
 										-- https://docs.coronalabs.com/plugin/gpgs/players/type/Player/index.html
-										btnGoogle.isVisible = false;
+										refreshGoogle();
 									else
 										show_msg(event3.errorMessage);
 										print("could not get player id")
@@ -102,9 +130,33 @@ function new()
 	
 	local function initGoogle()
 		-- Initialize game network based on platform
-		if ( globalData.gpgs ) then
+		if (globalData.gpgs) then
+			-- btnGoogle.alpha = 0.5;
 			-- Initialize Google Play Games Services
-			globalData.gpgs.init( gpgsInitListener )
+			globalData.gpgs.init(gpgsInitListener)
+		end
+	end
+	
+	function refreshGoogle()
+		if(initGC)then
+			btnGoogle.isVisible = false;
+			btnLeaderboards.isVisible = true;
+			btnAchievements.isVisible = true;
+		else
+			initGoogle();
+		end
+	end
+	refreshGoogle();
+	
+	local function closeGame( event )
+		if ( event.action == "clicked" ) then
+			local i = event.index
+			if ( i == 1 ) then
+				-- Do nothing; dialog will simply dismiss
+			elseif ( i == 2 ) then
+				localGroup:removeAllListeners();
+				native.requestExit();
+			end
 		end
 	end
 	
@@ -121,7 +173,7 @@ function new()
 			local w = item_mc.w;
 			local h = item_mc.h;
 
-			if(math.abs(dx)<w/2 and math.abs(dy)<h/2 and item_mc.isVisible)then
+			if(math.abs(dx)<w/2 and math.abs(dy)<h/2 and item_mc.isVisible and btnGoogle.alpha)then
 				if(item_mc._selected and event.isPrimaryButtonDown)then
 					if(item_mc.img)then
 						item_mc.img:stopAtFrame(2);
@@ -181,12 +233,23 @@ function new()
 						return true;
 					elseif(item_mc.act == "btnExit")then
 						soundPlay("click_approve");
-						localGroup:removeAllListeners();
-						native.requestExit();
+						-- localGroup:removeAllListeners();
+						-- native.requestExit();
+						native.showAlert( "Quit", "Are you sure you want quit?", { "No", "Yes" }, closeGame )
 						return true;
 					elseif(item_mc.act == "btnGoogle")then
 						soundPlay("click_approve");
 						initGoogle();
+						return true;
+					elseif(item_mc.act == "btnLead")then
+						soundPlay("click_approve");
+						showLeaderbords();
+						return true;
+					elseif(item_mc.act == "btnAch")then
+						soundPlay("click_approve");
+						if(globalData.gpgs)then
+							globalData.gpgs.achievements.show();
+						end
 						return true;
 					end
 				end

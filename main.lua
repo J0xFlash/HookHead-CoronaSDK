@@ -2,7 +2,7 @@
 -- v 1.00
 -- @author: Sergey Pomorin
 -- @skype: j0xflash
--- @project: The Floor is Lava The Game
+-- @project: Hook Head
 ----------
 
 _W = display.contentWidth;
@@ -38,21 +38,23 @@ print("WxH: ".._W.."x".._H);
 
 -- data user
 login_obj = {};
+initGC = false;
+initAppodeal = false;
 
 -- Init Game Center
 globalData = require("src.globalData");
 globalData.gpgs = nil
 globalData.gameCenter = nil
-licensing = nil
+appodeal = nil
 
 local platform = system.getInfo( "platform" )
 local env = system.getInfo( "environment" )
  
 if ( platform == "android" and env ~= "simulator" ) then
-    globalData.gpgs = require( "plugin.gpgs" )
-	licensing = require( "licensing" );
+    -- globalData.gpgs = require( "plugin.gpgs" )
+	-- appodeal = require( "plugin.appodeal" )
 elseif ( platform == "ios" and env ~= "simulator" ) then
-    globalData.gameCenter = require( "gameNetwork" )
+    -- globalData.gameCenter = require( "gameNetwork" )
 end
 
 ---- import source
@@ -73,6 +75,8 @@ greenMsgs = require("framework.greenMsgs").new();
 greenMsgs.x = 20;
 greenMsgs.y = 20;
 greenMsgs.isVisible = options_debug;
+---- achievements
+itemAchievement = require("src.ItemAchievement").new();
 
 ---- src
 game_art = nil;
@@ -85,9 +89,14 @@ _cursor = nil;
 _tooltip = nil;
 _bLoadGame = false;
 
+-- set achievements
+itemAchievement:addItemGCID(1, "hh_ach1", "hh_ach1", "hh_ach1"); -- 20
+
 local screenLoader = nil;
 
 function refreshScaleGraphics()
+	_WO = 1080;
+	_HO = 1920;
 	_W = display.contentWidth;
 	_H = display.contentHeight;
 	scaleGraphics = 1;
@@ -405,6 +414,10 @@ function addItemCount(item_id, val)
 			login_obj[item_id] = tonumber(val);
 		end
 	end
+	
+	if(getItemCount("countDeath") >= 20)then
+		itemAchievement:createAchievement(8);
+	end
 end
 
 function setItemCount(item_id, val)
@@ -464,9 +477,7 @@ end
 function setSound(value)
 	greenSounds:setSoundBol(value);
 end
-function soundSwith()
-	greenSounds:switchSound();
-end
+
 function musicSwith()
 	greenSounds:switchMusic();
 	return greenSounds:getMusicBol();
@@ -511,10 +522,14 @@ local function iniSetArt(set_name)
 end
 
 local function loadMusic()
-	-- greenSounds:add_sound('music', true);
+	greenSounds:add_sound('music', true);
 end
 local function loadSounds()
 	greenSounds:add_sound('click_approve');
+	greenSounds:add_sound('soundDie');
+	greenSounds:add_sound('soundHook');
+	greenSounds:add_sound('soundSaw');
+	greenSounds:add_sound('soundTorch');
 end
 
 local function loadTexture()
@@ -553,7 +568,7 @@ local function main()
 		loadData();
 	end);
 	table.insert(loading_steps, function()
-		-- musicPlay("musicMap");
+		musicPlay("music");
 	end);
 	
 	local loading_steps_max = #loading_steps+1;
@@ -569,9 +584,20 @@ local function main()
 				local id = loading_steps_max - #loading_steps-1;
 				local loading_p = math.floor((loading_steps_max - #loading_steps)*100/loading_steps_max);
 				screenLoader.tf.text = getText("loading")..': '..loading_p..'%';
-				screenLoader.tfDesc.text = getText("loading_"..id);
+				-- screenLoader.tfDesc.text = getText("loading_"..id);
 			end
 			return
+		end
+		
+		local function adListener( event )
+			if ( event.phase == "init" ) then  -- Successful initialization
+				initAppodeal = true;
+			end
+		end
+		
+		if(appodeal)then
+			-- Initialize the Appodeal plugin
+			appodeal.init( adListener, { appKey="appKey" } )
 		end
 		loaderClose();
 		director:changeScene("src.ScreenMenu");

@@ -1,7 +1,7 @@
 --
 -- created with TexturePacker - https://www.codeandweb.com/texturepacker
 --
--- $TexturePacker:SmartUpdate:5e84a73929f450c97ba4871b9a78a166:92a4abf84018e2416d3b77583897b548:24e4eb0fb33b646fc21874bb6fc8fecb$
+-- $TexturePacker:SmartUpdate:ffab12585e7aba724118872806a27197:e208d0231cbb665118088627b670d592:24e4eb0fb33b646fc21874bb6fc8fecb$
 --
 -- local sheetInfo = require("mysheet")
 -- local myImageSheet = graphics.newImageSheet( "mysheet.png", sheetInfo:getSheet() )
@@ -15,32 +15,48 @@ SheetInfo.sheet =
     frames = {
     
         {
+            -- btnAch
+            x=1,
+            y=1060,
+            width=300,
+            height=300,
+
+        },
+        {
             -- btnExit
-            x=1073,
-            y=515,
+            x=303,
+            y=1060,
             width=300,
             height=300,
 
         },
         {
             -- btnGoogle
-            x=1447,
-            y=1023,
+            x=1689,
+            y=546,
             width=300,
             height=222,
 
         },
         {
+            -- btnLead
+            x=515,
+            y=625,
+            width=300,
+            height=300,
+
+        },
+        {
             -- btnMenu
-            x=1,
-            y=1023,
+            x=605,
+            y=927,
             width=300,
             height=300,
 
         },
         {
             -- btnPause
-            x=1,
+            x=817,
             y=625,
             width=300,
             height=300,
@@ -48,40 +64,40 @@ SheetInfo.sheet =
         },
         {
             -- btnPlay
-            x=1083,
-            y=1,
+            x=1,
+            y=546,
             width=512,
             height=512,
 
         },
         {
             -- btnRestart
-            x=303,
-            y=625,
+            x=751,
+            y=1229,
             width=300,
             height=300,
 
         },
         {
             -- btnSound
-            x=873,
-            y=817,
-            width=300,
-            height=300,
-
-        },
-        {
-            -- btnSoundOff
-            x=303,
+            x=907,
             y=927,
             width=300,
             height=300,
 
         },
         {
+            -- btnSoundOff
+            x=1119,
+            y=625,
+            width=300,
+            height=300,
+
+        },
+        {
             -- character_1
-            x=1575,
-            y=751,
+            x=1053,
+            y=1229,
             width=270,
             height=270,
 
@@ -92,8 +108,8 @@ SheetInfo.sheet =
         },
         {
             -- character_2
-            x=605,
-            y=625,
+            x=1421,
+            y=546,
             width=266,
             height=266,
 
@@ -104,8 +120,8 @@ SheetInfo.sheet =
         },
         {
             -- character_3
-            x=605,
-            y=893,
+            x=1689,
+            y=770,
             width=266,
             height=266,
 
@@ -116,8 +132,8 @@ SheetInfo.sheet =
         },
         {
             -- character_4
-            x=1175,
-            y=817,
+            x=1209,
+            y=927,
             width=270,
             height=270,
 
@@ -130,21 +146,29 @@ SheetInfo.sheet =
             -- floor
             x=1,
             y=1,
-            width=1080,
+            width=1536,
             height=404,
 
         },
         {
             -- hook
-            x=303,
-            y=1229,
+            x=1539,
+            y=1,
             width=432,
             height=141,
 
         },
         {
+            -- saw
+            x=1539,
+            y=144,
+            width=400,
+            height=400,
+
+        },
+        {
             -- score
-            x=1,
+            x=515,
             y=407,
             width=870,
             height=216,
@@ -156,24 +180,36 @@ SheetInfo.sheet =
         },
         {
             -- tileBg
-            x=1175,
-            y=1089,
+            x=1681,
+            y=1038,
             width=254,
             height=254,
 
         },
         {
+            -- torch
+            x=1575,
+            y=1314,
+            width=164,
+            height=230,
+
+            sourceX = 32,
+            sourceY = 14,
+            sourceWidth = 250,
+            sourceHeight = 250
+        },
+        {
             -- wallLeftDown
-            x=1597,
-            y=1,
+            x=1,
+            y=1362,
             width=248,
             height=248,
 
         },
         {
             -- wallLeftMiddle
-            x=873,
-            y=407,
+            x=1481,
+            y=814,
             width=198,
             height=248,
 
@@ -184,24 +220,24 @@ SheetInfo.sheet =
         },
         {
             -- wallLeftTop
-            x=1597,
-            y=251,
+            x=251,
+            y=1362,
             width=248,
             height=248,
 
         },
         {
             -- wallRightDown
-            x=1597,
-            y=501,
+            x=501,
+            y=1362,
             width=248,
             height=248,
 
         },
         {
             -- wallRightMiddle
-            x=1375,
-            y=515,
+            x=1481,
+            y=1064,
             width=198,
             height=248,
 
@@ -212,43 +248,47 @@ SheetInfo.sheet =
         },
         {
             -- wallRightTop
-            x=873,
-            y=1119,
+            x=1325,
+            y=1314,
             width=248,
             height=248,
 
         },
     },
 
-    sheetContentWidth = 1846,
-    sheetContentHeight = 1371
+    sheetContentWidth = 1990,
+    sheetContentHeight = 1611
 }
 
 SheetInfo.frameIndex =
 {
 
-    ["btnExit"] = 1,
-    ["btnGoogle"] = 2,
-    ["btnMenu"] = 3,
-    ["btnPause"] = 4,
-    ["btnPlay"] = 5,
-    ["btnRestart"] = 6,
-    ["btnSound"] = 7,
-    ["btnSoundOff"] = 8,
-    ["character_1"] = 9,
-    ["character_2"] = 10,
-    ["character_3"] = 11,
-    ["character_4"] = 12,
-    ["floor"] = 13,
-    ["hook"] = 14,
-    ["score"] = 15,
-    ["tileBg"] = 16,
-    ["wallLeftDown"] = 17,
-    ["wallLeftMiddle"] = 18,
-    ["wallLeftTop"] = 19,
-    ["wallRightDown"] = 20,
-    ["wallRightMiddle"] = 21,
-    ["wallRightTop"] = 22,
+    ["btnAch"] = 1,
+    ["btnExit"] = 2,
+    ["btnGoogle"] = 3,
+    ["btnLead"] = 4,
+    ["btnMenu"] = 5,
+    ["btnPause"] = 6,
+    ["btnPlay"] = 7,
+    ["btnRestart"] = 8,
+    ["btnSound"] = 9,
+    ["btnSoundOff"] = 10,
+    ["character_1"] = 11,
+    ["character_2"] = 12,
+    ["character_3"] = 13,
+    ["character_4"] = 14,
+    ["floor"] = 15,
+    ["hook"] = 16,
+    ["saw"] = 17,
+    ["score"] = 18,
+    ["tileBg"] = 19,
+    ["torch"] = 20,
+    ["wallLeftDown"] = 21,
+    ["wallLeftMiddle"] = 22,
+    ["wallLeftTop"] = 23,
+    ["wallRightDown"] = 24,
+    ["wallRightMiddle"] = 25,
+    ["wallRightTop"] = 26,
 }
 
 function SheetInfo:getSheet()
