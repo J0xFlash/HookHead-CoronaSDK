@@ -208,10 +208,10 @@ function new()
 		refreshSkinCharacter(4);
 		
 		if(_score >= 500)then
-			itemAchievement:createAchievement(9);
+			-- itemAchievement:createAchievement(9);
 		end
 		if(_score >= 2500)then
-			itemAchievement:createAchievement(10);
+			-- itemAchievement:createAchievement(10);
 		end
 		
 		if(_wndGameOver == nil)then
@@ -364,11 +364,11 @@ function new()
 		filterGame(true);
 		
 		if(_gameObj["countTorch"] >=15)then
-			itemAchievement:createAchievement(2);
+			-- itemAchievement:createAchievement(2);
 		elseif(_gameObj["countTorch"] >=5)then
-			itemAchievement:createAchievement(1);
+			-- itemAchievement:createAchievement(1);
 		elseif(_gameObj["countTorch"] >=1)then
-			itemAchievement:createAchievement(6);
+			-- itemAchievement:createAchievement(6);
 		end
 	end
 	
@@ -417,7 +417,7 @@ function new()
 	local function hitSaw()
 		_gameObj["countSaw"] = _gameObj["countSaw"] + 1;
 		if(_gameObj["countSaw"] >= 1)then
-			itemAchievement:createAchievement(7);
+			-- itemAchievement:createAchievement(7);
 		end
 		soundPlay("soundSaw");
 		gameOver();
@@ -518,15 +518,15 @@ function new()
 		refreshSkinCharacter(3);
 		_gameObj["countWall"] = _gameObj["countWall"] + 1;
 		if(_gameObj["countWall"] >= 50)then
-			itemAchievement:createAchievement(5);
+			-- itemAchievement:createAchievement(5);
 		elseif(_gameObj["countWall"] >= 25)then
-			itemAchievement:createAchievement(4);
+			-- itemAchievement:createAchievement(4);
 		elseif(_gameObj["countWall"] >= 1)then
-			itemAchievement:createAchievement(3);
+			-- itemAchievement:createAchievement(3);
 		end
 		
 		if(_character.y > wall.y + (wall.rect.height/2-25)*scaleGraphics)then
-			itemAchievement:createAchievement(11);
+			-- itemAchievement:createAchievement(11);
 		end
 		
 		_speedGame = math.min((1 + _gameObj["countWall"]/10)*scaleGraphics, 5*scaleGraphics);

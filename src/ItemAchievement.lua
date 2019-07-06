@@ -192,7 +192,7 @@ function new()
 		elseif(gamecenterGoogle[value] and optionsBuild == "android")then
 		elseif(gamecenterSteam[value] and (optionsBuild == "windows" or optionsBuild == "osx"))then
 		else
-			-- print('ERROR:I DONT HAVE THIS REWARD');
+			print('ERROR:I DONT HAVE THIS REWARD');
 			return false
 		end
 		local vImg = value;

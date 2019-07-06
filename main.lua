@@ -20,7 +20,7 @@ options_controls = "touch"; -- touch, cursor, console
 optionsMobile = (optionsBuild == "ios" or optionsBuild == "android");
 options_save_fname = "dataUser";
 
-encrypt_password = '12345678test'
+encrypt_password = '12345678pass'
 
 -- groups
 mainGroup = display.newGroup();
@@ -45,16 +45,18 @@ initAppodeal = false;
 globalData = require("src.globalData");
 globalData.gpgs = nil
 globalData.gameCenter = nil
+licensing = nil
 appodeal = nil
 
 local platform = system.getInfo( "platform" )
 local env = system.getInfo( "environment" )
  
 if ( platform == "android" and env ~= "simulator" ) then
-    -- globalData.gpgs = require( "plugin.gpgs" )
+    globalData.gpgs = require( "plugin.gpgs" )
+	licensing = require( "licensing" );
 	-- appodeal = require( "plugin.appodeal" )
 elseif ( platform == "ios" and env ~= "simulator" ) then
-    -- globalData.gameCenter = require( "gameNetwork" )
+    globalData.gameCenter = require( "gameNetwork" )
 end
 
 ---- import source
@@ -76,7 +78,7 @@ greenMsgs.x = 20;
 greenMsgs.y = 20;
 greenMsgs.isVisible = options_debug;
 ---- achievements
-itemAchievement = require("src.ItemAchievement").new();
+-- itemAchievement = require("src.ItemAchievement").new();
 
 ---- src
 game_art = nil;
@@ -90,7 +92,17 @@ _tooltip = nil;
 _bLoadGame = false;
 
 -- set achievements
-itemAchievement:addItemGCID(1, "hh_ach1", "hh_ach1", "hh_ach1"); -- 20
+-- itemAchievement:addItemGCID(1, "hh_ach1", "CgkI0POrzdITEAIQAQ", "hh_ach1"); -- 20
+-- itemAchievement:addItemGCID(2, "hh_ach1", "CgkI0POrzdITEAIQAg", "hh_ach1"); -- 20
+-- itemAchievement:addItemGCID(3, "hh_ach1", "CgkI0POrzdITEAIQAw", "hh_ach1"); -- 20 +
+-- itemAchievement:addItemGCID(4, "hh_ach1", "CgkI0POrzdITEAIQBA", "hh_ach1"); -- 20 +
+-- itemAchievement:addItemGCID(5, "hh_ach1", "CgkI0POrzdITEAIQBQ", "hh_ach1"); -- 20 +
+-- itemAchievement:addItemGCID(6, "hh_ach1", "CgkI0POrzdITEAIQBg", "hh_ach1"); -- 20
+-- itemAchievement:addItemGCID(7, "hh_ach1", "CgkI0POrzdITEAIQBw", "hh_ach1"); -- 20
+-- itemAchievement:addItemGCID(8, "hh_ach1", "CgkI0POrzdITEAIQCA", "hh_ach1"); -- 20
+-- itemAchievement:addItemGCID(9, "hh_ach1", "CgkI0POrzdITEAIQCQ", "hh_ach1"); -- 20
+-- itemAchievement:addItemGCID(10, "hh_ach1", "CgkI0POrzdITEAIQCg", "hh_ach1"); -- 20
+-- itemAchievement:addItemGCID(11, "hh_ach1", "CgkI0POrzdITEAIQCw", "hh_ach1"); -- 20
 
 local screenLoader = nil;
 
@@ -416,7 +428,7 @@ function addItemCount(item_id, val)
 	end
 	
 	if(getItemCount("countDeath") >= 20)then
-		itemAchievement:createAchievement(8);
+		-- itemAchievement:createAchievement(8);
 	end
 end
 
@@ -597,7 +609,7 @@ local function main()
 		
 		if(appodeal)then
 			-- Initialize the Appodeal plugin
-			appodeal.init( adListener, { appKey="appKey" } )
+			appodeal.init( adListener, { appKey="bdaed3861536353c253d7874e73b4d93f1d783eacd8442e4" } )
 		end
 		loaderClose();
 		director:changeScene("src.ScreenMenu");

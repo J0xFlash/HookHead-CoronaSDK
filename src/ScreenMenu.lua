@@ -143,7 +143,7 @@ function new()
 			btnLeaderboards.isVisible = true;
 			btnAchievements.isVisible = true;
 		else
-			initGoogle();
+			-- initGoogle();
 		end
 	end
 	refreshGoogle();

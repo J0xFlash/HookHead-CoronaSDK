@@ -22,6 +22,7 @@ settings =
 		{
 			--"android.permission.INTERNET",
 			--"android.permission.ACCESS_NETWORK_STATE",
+            "com.android.vending.CHECK_LICENSE"
 		},
 		supportsScreens =
 			{
@@ -30,7 +31,7 @@ settings =
 				largeScreens  = true,
 				xlargeScreens = true,
 			},
-		googlePlayGamesAppId = "ID",
+		googlePlayGamesAppId = "675008936400",
 	},
 
 	--
